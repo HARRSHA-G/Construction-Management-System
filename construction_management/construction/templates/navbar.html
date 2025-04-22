@@ -1,0 +1,63 @@
+{% load static %}
+<header class="fixed top-0 left-0 right-0 bg-darkSecondary z-50 shadow-lg">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+        <!-- Logo -->
+        <a href="{% url 'index' %}" class="logo text-2xl text-primary font-montserrat">Ram Constructions</a>
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex space-x-6">
+            <a href="{% url 'index' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+            <a href="{% url 'projects' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/projects/' %}active{% endif %}">Projects</a>
+            <a href="{% url 'expenses' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/expenses/' %}active{% endif %}">Expenses</a>
+            <a href="{% url 'analytics' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/analytics/' %}active{% endif %}">Analytics</a>
+        </nav>
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" class="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary">
+            <i class="ri-menu-line text-lightText ri-lg"></i>
+        </button>
+    </div>
+    <!-- Mobile Navigation -->
+    <div id="mobileMenu" class="md:hidden mt-4 pb-2 hidden">
+        <nav class="flex flex-col space-y-3 px-4">
+            <a href="{% url 'index' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/' %}bg-primary{% endif %}">Home</a>
+            <a href="{% url 'projects' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/projects/' %}bg-primary{% endif %}">Projects</a>
+            <a href="{% url 'expenses' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/expenses/' %}bg-primary{% endif %}">Expenses</a>
+            <a href="{% url 'analytics' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/analytics/' %}bg-primary{% endif %}">Analytics</a>
+        </nav>
+    </div>
+</header>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
+    .logo {
+        font-family: 'Montserrat', sans-serif;
+    }
+    .nav-link {
+        transition: color 0.3s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+        color: #3B82F6;
+    }
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: #3B82F6;
+        transition: width 0.3s ease;
+    }
+    .nav-link:hover::after, .nav-link.active::after {
+        width: 100%;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            mobileMenuBtn.innerHTML = isOpen ? '<i class="ri-close-line text-lightText ri-lg"></i>' : '<i class="ri-menu-line text-lightText ri-lg"></i>';
+        });
+    });
+</script>

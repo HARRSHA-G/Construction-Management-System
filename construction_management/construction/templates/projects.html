@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% block title %}Ram Constructions - Projects{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    main {
+        flex: 1 0 auto;
+    }
+    footer {
+        flex-shrink: 0;
+    }
+    .custom-switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+    }
+    .custom-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .custom-switch .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #4B5563;
+        transition: 0.4s;
+        border-radius: 20px;
+    }
+    .custom-switch .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+    }
+    .custom-switch input:checked + .slider {
+        background-color: #3B82F6;
+    }
+    .custom-switch input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+</style>
+{% endblock %}
+{% block content %}
+<section id="projects" class="py-16 bg-dark">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold text-lightText mb-4 sm:mb-0">Projects</h2>
+            <button id="addProjectBtn" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+                <span class="w-6 h-6 flex items-center justify-center mr-2">
+                    <i class="ri-add-line"></i>
+                </span>
+                Add Project
+            </button>
+        </div>
+        <div id="projectList" class="custom-scrollbar overflow-x-auto pb-4">
+            <div class="flex space-x-6 min-w-max" id="projectCards"></div>
+        </div>
+    </div>
+</section>
+<!-- Add Project Modal -->
+<div id="addProjectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-darkSecondary rounded-lg p-6 w-full max-w-2xl mx-4 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-lightText">Add New Project</h3>
+            <button id="closeModalBtn" class="text-gray-400 hover:text-white transition-colors">
+                <span class="w-6 h-6 flex items-center justify-center">
+                    <i class="ri-close-line ri-lg"></i>
+                </span>
+            </button>
+        </div>
+        <form id="addProjectForm">
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Project Name</label>
+            <input type="text" name="name" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Enter project name" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Land Details</label>
+                <textarea name="land_details" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 h-24 resize-none" placeholder="Enter land details" required></textarea>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Land Address</label>
+                <input type="text" name="land_address" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Enter land address" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Budget (₹)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
+                    <input type="number" name="budget" step="0.01" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 pl-8" placeholder="0.00" required>
+                </div>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Status</label>
+                <select name="status" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" required>
+                    <option value="Planned">Planned</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Document</label>
+                <input type="file" name="document" accept=".pdf" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3">
+            </div>
+            <button type="submit" class="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full">Add Project</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    const { jsPDF } = window.jspdf;
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+    }
+
+    async function fetchProjects() {
+        try {
+            const response = await fetch('/api/projects/');
+            const projects = await response.json();
+            const projectCards = document.getElementById('projectCards');
+            projectCards.innerHTML = '';
+            if (projects.length === 0) {
+                projectCards.innerHTML = '<p class="text-gray-300">No projects available. Add a project to get started.</p>';
+            } else {
+                projects.forEach(project => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-darkSecondary rounded-lg shadow-lg p-6 w-80 flex-none slide-up';
+                    card.innerHTML = `
+                        <h3 class="text-xl font-semibold text-lightText mb-2">${project.name}</h3>
+                        <p class="text-gray-300 mb-2"><strong>Land Details:</strong> ${project.land_details}</p>
+                        <p class="text-gray-300 mb-2"><strong>Address:</strong> ${project.land_address}</p>
+                        <p class="text-gray-300 mb-2"><strong>Budget:</strong> ${formatCurrency(project.budget)}</p>
+                        <p class="text-gray-300 mb-4"><strong>Status:</strong> <span class="px-2 py-1 rounded-full text-sm ${project.status === 'Completed' ? 'bg-green-500' : project.status === 'In Progress' ? 'bg-yellow-500' : 'bg-gray-500'}">${project.status}</span></p>
+                        <div class="flex space-x-4">
+                            ${project.document ? `<a href="${project.document}" download class="text-primary hover:text-blue-600 transition-colors flex items-center"><span class="w-5 h-5 mr-1"><i class="ri-download-line"></i></span>Download</a>` : ''}
+                            <button onclick="deleteProject(${project.id})" class="text-red-500 hover:text-red-600 transition-colors flex items-center"><span class="w-5 h-5 mr-1"><i class="ri-delete-bin-line"></i></span>Delete</button>
+                        </div>
+                    `;
+                    projectCards.appendChild(card);
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching projects:', error);
+            alert('Failed to load projects.');
+        }
+    }
+
+    async function addProject(event) {
+        event.preventDefault();
+        const form = document.getElementById('addProjectForm');
+        const formData = new FormData(form);
+        try {
+            const response = await fetch('/api/projects/', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                document.getElementById('addProjectModal').classList.add('hidden');
+                form.reset();
+                fetchProjects();
+            } else {
+                const error = await response.json();
+                alert('Error: ' + JSON.stringify(error));
+            }
+        } catch (error) {
+            console.error('Error adding project:', error);
+            alert('Failed to add project.');
+        }
+    }
+
+    async function deleteProject(id) {
+        if (confirm('Are you sure you want to delete this project?')) {
+            try {
+                const response = await fetch(`/api/projects/${id}/`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    fetchProjects();
+                } else {
+                    alert('Failed to delete project.');
+                }
+            } catch (error) {
+                console.error('Error deleting project:', error);
+                alert('Failed to delete project.');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchProjects();
+        const addProjectBtn = document.getElementById('addProjectBtn');
+        const addProjectModal = document.getElementById('addProjectModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const addProjectForm = document.getElementById('addProjectForm');
+
+        addProjectBtn.addEventListener('click', function() {
+            addProjectModal.classList.remove('hidden');
+        });
+
+        closeModalBtn.addEventListener('click', function() {
+            addProjectModal.classList.add('hidden');
+            addProjectForm.reset();
+        });
+
+        addProjectModal.addEventListener('click', function(e) {
+            if (e.target === addProjectModal) {
+                addProjectModal.classList.add('hidden');
+                addProjectForm.reset();
+            }
+        });
+
+        addProjectForm.addEventListener('submit', addProject);
+    });
+</script>
+{% endblock %}

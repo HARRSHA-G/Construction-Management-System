@@ -1,0 +1,116 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>{% load static %}
+<footer class="bg-darkSecondary py-12 border-t border-darkTertiary">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                <a href="{% url 'index' %}" class="logo text-2xl text-primary mb-4 block">Ram Constructions</a>
+                <p class="text-gray-300 mb-4">Comprehensive construction management system for builders and contractors.</p>
+                <div class="flex space-x-4">
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary text-lightText hover:bg-primary transition-colors">
+                        <i class="ri-facebook-fill"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary text-lightText hover:bg-primary transition-colors">
+                        <i class="ri-twitter-x-fill"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary text-lightText hover:bg-primary transition-colors">
+                        <i class="ri-linkedin-fill"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary text-lightText hover:bg-primary transition-colors">
+                        <i class="ri-instagram-fill"></i>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold text-lightText mb-4">Quick Links</h4>
+                <ul class="space-y-2">
+                    <li><a href="{% url 'index' %}" class="text-gray-300 hover:text-primary transition-colors">Home</a></li>
+                    <li><a href="{% url 'projects' %}" class="text-gray-300 hover:text-primary transition-colors">Projects</a></li>
+                    <li><a href="{% url 'expenses' %}" class="text-gray-300 hover:text-primary transition-colors">Expenses</a></li>
+                    <li><a href="{% url 'analytics' %}" class="text-gray-300 hover:text-primary transition-colors">Analytics</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold text-lightText mb-4">Contact</h4>
+                <ul class="space-y-2">
+                    <li class="flex items-start">
+                        <span class="w-5 h-5 flex items-center justify-center mr-2 mt-1">
+                            <i class="ri-map-pin-line text-primary"></i>
+                        </span>
+                        <span class="text-gray-300">123 Construction Ave, Building City, BC 12345</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-5 h-5 flex items-center justify-center mr-2">
+                            <i class="ri-phone-line text-primary"></i>
+                        </span>
+                        <span class="text-gray-300">+91 98765 43210</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-5 h-5 flex items-center justify-center mr-2">
+                            <i class="ri-mail-line text-primary"></i>
+                        </span>
+                        <span class="text-gray-300"><a href="mailto:info@ramconstructions.in">info@ramconstructions.in</a></span>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold text-lightText mb-4">Newsletter</h4>
+                <p class="text-gray-300 mb-4">Subscribe to our newsletter for updates.</p>
+                <form class="flex">
+                    <input type="email" placeholder="Your email" class="bg-darkTertiary border-none text-lightText rounded-l-lg px-4 py-2 w-full">
+                    <button type="submit" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg transition-colors">
+                        <span class="w-5 h-5 flex items-center justify-center">
+                            <i class="ri-send-plane-line"></i>
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="border-t border-darkTertiary mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p class="text-gray-400 mb-4 md:mb-0">© 2025 Construction Management System. All rights reserved.</p>
+            <div class="flex space-x-6">
+                <a href="#" class="text-gray-400 hover:text-primary transition-colors">Privacy Policy</a>
+                <a href="#" class="text-gray-400 hover:text-primary transition-colors">Terms of Service</a>
+                <a href="#" class="text-gray-400 hover:text-primary transition-colors">Cookie Policy</a>
+            </div>
+        </div>
+    </div>
+</footer>

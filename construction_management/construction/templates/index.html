@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Ram Constructions - Home{% endblock %}
+{% block extra_head %}
+<style>
+    /* Ensure consistency with provided document's custom styles */
+    .backdrop-blur-lg {
+        backdrop-filter: blur(8px);
+    }
+    .hover\:scale-110:hover {
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Hero Section -->
+<section id="home" class="min-h-screen relative">
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://readdy.ai/api/search-image?query=luxurious%20modern%20construction%20site%20with%20stunning%20architecture%2C%20golden%20sunset%20lighting%2C%20glass%20and%20steel%20structures%2C%20professional%20architectural%20visualization%2C%20cinematic%20atmosphere%2C%20high-end%20residential%20development%20with%20landscaping%2C%20ultra%20high%20resolution%2C%20photorealistic%20quality&width=1920&height=1080&seq=1&orientation=landscape'); filter: brightness(0.4);"></div>
+    <div class="relative container mx-auto px-4 py-20 flex flex-col justify-center min-h-screen">
+        <div class="max-w-3xl slide-up">
+            <h1 class="text-5xl md:text-7xl font-bold mb-8 text-white">Building <span class="text-primary">Dreams</span> Into Reality</h1>
+            <p class="text-xl md:text-2xl mb-10 text-gray-200">Ram Constructions - Your trusted partner in creating exceptional spaces. With over two decades of excellence in residential, commercial, and industrial construction.</p>
+            <div class="flex flex-wrap gap-6">
+                <a href="{% url 'projects' %}" class="bg-primary hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-medium transition-colors text-lg">Start Your Project</a>
+                <button id="showreelBtn" class="bg-white hover:bg-gray-100 text-dark px-8 py-4 rounded-lg font-medium transition-colors flex items-center text-lg">
+                    <span>Watch Showreel</span>
+                    <span class="w-6 h-6 flex items-center justify-center ml-2">
+                        <i class="ri-play-circle-line"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-primary bg-opacity-20 mb-4">
+                        <i class="ri-building-2-line text-primary ri-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Residential Projects</h3>
+                    <p class="text-gray-300">Luxury homes and apartments built with precision and care.</p>
+                </div>
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-primary bg-opacity-20 mb-4">
+                        <i class="ri-store-2-line text-primary ri-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Commercial Spaces</h3>
+                    <p class="text-gray-300">Modern offices and retail spaces designed for success.</p>
+                </div>
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-primary bg-opacity-20 mb-4">
+                        <i class="ri-factory-line text-primary ri-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Industrial Solutions</h3>
+                    <p class="text-gray-300">State-of-the-art facilities for manufacturing and logistics.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Featured Projects Section -->
+<section class="py-20 bg-darkSecondary">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-white mb-4">Featured Projects</h2>
+            <p class="text-xl text-gray-300">Discover our signature developments that showcase our expertise</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="bg-dark rounded-lg overflow-hidden shadow-lg">
+                <div class="h-64 relative overflow-hidden">
+                    <img src="https://readdy.ai/api/search-image?query=modern%20luxury%20apartment%20building%20exterior%2C%20contemporary%20architecture%2C%20glass%20facade%2C%20evening%20lighting%2C%20professional%20real%20estate%20photography%2C%20high-end%20residential&width=800&height=600&seq=2&orientation=landscape" alt="Project 1" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-white mb-2">The Grand Residences</h3>
+                    <p class="text-gray-300 mb-4">Luxury apartment complex featuring modern amenities and stunning views.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-primary">Completed 2024</span>
+                        <a href="{% url 'projects' %}" class="text-white hover:text-primary transition-colors flex items-center">
+                            Learn More
+                            <i class="ri-arrow-right-line ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-dark rounded-lg overflow-hidden shadow-lg">
+                <div class="h-64 relative overflow-hidden">
+                    <img src="https://readdy.ai/api/search-image?query=modern%20office%20building%20exterior%2C%20corporate%20architecture%2C%20glass%20and%20steel%20structure%2C%20daytime%2C%20professional%20commercial%20photography%2C%20business%20district&width=800&height=600&seq=3&orientation=landscape" alt="Project 2" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-white mb-2">Tech Hub Tower</h3>
+                    <p class="text-gray-300 mb-4">State-of-the-art office complex designed for leading tech companies.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-primary">In Progress</span>
+                        <a href="{% url 'projects' %}" class="text-white hover:text-primary transition-colors flex items-center">
+                            Learn More
+                            <i class="ri-arrow-right-line ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-dark rounded-lg overflow-hidden shadow-lg">
+                <div class="h-64 relative overflow-hidden">
+                    <img src="https://readdy.ai/api/search-image?query=modern%20shopping%20mall%20exterior%2C%20retail%20architecture%2C%20contemporary%20design%2C%20night%20lighting%2C%20professional%20commercial%20photography%2C%20urban%20retail&width=800&height=600&seq=4&orientation=landscape" alt="Project 3" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-white mb-2">City Center Mall</h3>
+                    <p class="text-gray-300 mb-4">Premium shopping destination with modern architecture and amenities.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-primary">Completed 2023</span>
+                        <a href="{% url 'projects' %}" class="text-white hover:text-primary transition-colors flex items-center">
+                            Learn More
+                            <i class="ri-arrow-right-line ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Customer Reviews Section -->
+<section id="reviews" class="py-20 bg-dark">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-white mb-4">Customer Reviews</h2>
+            <p class="text-xl text-gray-300">Hear from our satisfied clients</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="bg-darkSecondary rounded-lg shadow-lg p-6 slide-up">
+                <img src="{% static 'construction/images/R-1.jpg' %}" alt="Anita Sharma" class="w-12 h-12 rounded-full object-cover mb-4">
+                <div class="flex items-center mb-4">
+                    <div class="flex text-yellow-400">
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-4">"Ram Constructions exceeded our expectations with their professionalism and quality work. Our dream home was delivered on time!"</p>
+                <p class="text-lightText font-semibold">Rohit Sharma</p>
+            </div>
+            <div class="bg-darkSecondary rounded-lg shadow-lg p-6 slide-up">
+                <img src="{% static 'construction/images/R-2.jpg' %}" alt="Rahul Verma" class="w-12 h-12 rounded-full object-cover mb-4">
+                <div class="flex items-center mb-4">
+                    <div class="flex text-yellow-400">
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-half-fill"></i>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-4">"Great team to work with. The project was well-managed, though there were minor delays due to weather."</p>
+                <p class="text-lightText font-semibold">Rahul Verma</p>
+            </div>
+            <div class="bg-darkSecondary rounded-lg shadow-lg p-6 slide-up">
+                <img src="{% static 'construction/images/R-3.jpg' %}" alt="Priya Singh" class="w-12 h-12 rounded-full object-cover mb-4">
+                <div class="flex items-center mb-4">
+                    <div class="flex text-yellow-400">
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                        <i class="ri-star-fill"></i>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-4">"Outstanding service and attention to detail. Highly recommend Ram Constructions for any building project."</p>
+                <p class="text-lightText font-semibold">Priya Singh</p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Why Choose Us Section -->
+<section class="py-20 bg-darkSecondary">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-white mb-4">Why Choose Ram Constructions</h2>
+            <p class="text-xl text-gray-300">Excellence in every aspect of construction</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="w-16 h-16 flex items-center justify-center rounded-full bg-primary bg-opacity-20 mx-auto mb-6">
+                    <i class="ri-medal-line text-primary ri-2x"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-3">20+ Years Experience</h3>
+                <p class="text-gray-300">Decades of expertise in delivering exceptional construction projects.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 flex items-center justify-center rounded-full bg-primary bg-opacity-20 mx-auto mb-6">
+                    <i class="ri-team-line text-primary ri-2x"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-3">Expert Team</h3>
+                <p class="text-gray-300">Skilled professionals committed to excellence and innovation.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 flex items-center justify-center rounded-full bg-primary bg-opacity-20 mx-auto mb-6">
+                    <i class="ri-timer-line text-primary ri-2x"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-3">On-Time Delivery</h3>
+                <p class="text-gray-300">Consistent track record of completing projects within deadlines.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 flex items-center justify-center rounded-full bg-primary bg-opacity-20 mx-auto mb-6">
+                    <i class="ri-shield-check-line text-primary ri-2x"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-3">Quality Assured</h3>
+                <p class="text-gray-300">Highest standards of construction quality and safety.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const showreelBtn = document.getElementById('showreelBtn');
+        const videoModal = document.createElement('div');
+        videoModal.id = 'videoModal';
+        videoModal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden fade-in';
+        videoModal.innerHTML = `
+            <div class="relative w-full max-w-4xl mx-4">
+                <button id="closeVideoBtn" class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
+                    <span class="w-8 h-8 flex items-center justify-center">
+                        <i class="ri-close-line ri-2x"></i>
+                    </span>
+                </button>
+                <div class="bg-black rounded-lg overflow-hidden shadow-2xl relative">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10" id="videoLoader">
+                        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <video id="showreelVideo" class="w-full aspect-video" controls>
+                        <source src="https://readdy.ai/api/search-video?query=Cinematic construction site footage showcasing modern architecture and building processes. Aerial shots of skyscrapers under construction, workers in action, and sophisticated machinery at work. High-end residential developments and commercial buildings in progress. Professional color grading with warm sunset lighting. Smooth camera movements and transitions. 4K quality footage with dramatic music&duration=30" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(videoModal);
+
+        const closeVideoBtn = document.getElementById('closeVideoBtn');
+        const showreelVideo = document.getElementById('showreelVideo');
+
+        function openVideoModal() {
+            videoModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            const videoLoader = document.getElementById('videoLoader');
+            videoLoader.style.display = 'flex';
+            showreelVideo.addEventListener('loadeddata', function() {
+                videoLoader.style.display = 'none';
+                showreelVideo.play();
+            }, { once: true });
+            showreelVideo.load();
+        }
+
+        function closeVideoModal() {
+            videoModal.classList.add('hidden');
+            document.body.style.overflow = '';
+            showreelVideo.pause();
+            showreelVideo.currentTime = 0;
+        }
+
+        showreelBtn.addEventListener('click', openVideoModal);
+        closeVideoBtn.addEventListener('click', closeVideoModal);
+        videoModal.addEventListener('click', function(e) {
+            if (e.target === videoModal) {
+                closeVideoModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !videoModal.classList.contains('hidden')) {
+                closeVideoModal();
+            }
+        });
+    });
+</script>
+{% endblock %}
