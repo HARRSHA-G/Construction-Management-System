@@ -2,13 +2,13 @@
 <header class="fixed top-0 left-0 right-0 bg-darkSecondary z-50 shadow-lg">
     <div class="container mx-auto px-4 py-3 flex items-center justify-between">
         <!-- Logo -->
-        <a href="{% url 'index' %}" class="logo text-2xl text-primary font-montserrat">Ram Constructions</a>
+        <a href="{% url 'index' %}" class="logo text-2xl text-primary font-montserrat">RAM Construction</a>
         <!-- Desktop Navigation -->
         <nav class="hidden md:flex space-x-6">
             <a href="{% url 'index' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
             <a href="{% url 'projects' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/projects/' %}active{% endif %}">Projects</a>
             <a href="{% url 'expenses' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/expenses/' %}active{% endif %}">Expenses</a>
-            <a href="{% url 'analytics' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/analytics/' %}active{% endif %}">Analytics</a>
+            <a href="{% url 'reports' %}" class="px-3 py-2 text-lightText relative nav-link {% if request.path == '/reports/' %}active{% endif %}">Reports</a>
         </nav>
         <!-- Mobile Menu Button -->
         <button id="mobileMenuBtn" class="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary">
@@ -16,14 +16,24 @@
         </button>
     </div>
     <!-- Mobile Navigation -->
-    <div id="mobileMenu" class="md:hidden mt-4 pb-2 hidden">
-        <nav class="flex flex-col space-y-3 px-4">
+    <div id="mobileMenu" class="md:hidden fixed top-0 left-0 h-full w-64 bg-darkSecondary transform -translate-x-full transition-transform duration-300 ease-in-out z-50 shadow-lg">
+        <div class="p-4 border-b border-darkTertiary">
+            <div class="flex justify-between items-center">
+                <a href="{% url 'index' %}" class="logo text-2xl text-primary">Construction</a>
+                <button id="closeMobileMenu" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary">
+                    <i class="ri-close-line text-lightText ri-lg"></i>
+                </button>
+            </div>
+        </div>
+        <nav class="flex flex-col space-y-3 p-4">
             <a href="{% url 'index' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/' %}bg-primary{% endif %}">Home</a>
             <a href="{% url 'projects' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/projects/' %}bg-primary{% endif %}">Projects</a>
             <a href="{% url 'expenses' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/expenses/' %}bg-primary{% endif %}">Expenses</a>
-            <a href="{% url 'analytics' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/analytics/' %}bg-primary{% endif %}">Analytics</a>
+            <a href="{% url 'reports' %}" class="px-3 py-2 text-lightText hover:bg-primary rounded-md transition-colors {% if request.path == '/reports/' %}bg-primary{% endif %}">Reports</a>
         </nav>
     </div>
+    <!-- Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 </header>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
@@ -54,10 +64,36 @@
     document.addEventListener('DOMContentLoaded', function() {
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
-        mobileMenuBtn.addEventListener('click', function() {
-            mobileMenu.classList.toggle('hidden');
-            const isOpen = !mobileMenu.classList.contains('hidden');
-            mobileMenuBtn.innerHTML = isOpen ? '<i class="ri-close-line text-lightText ri-lg"></i>' : '<i class="ri-menu-line text-lightText ri-lg"></i>';
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+        function openMobileMenu() {
+            mobileMenu.classList.remove('-translate-x-full');
+            mobileMenuOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenuHandler() {
+            mobileMenu.classList.add('-translate-x-full');
+            mobileMenuOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        mobileMenuBtn.addEventListener('click', openMobileMenu);
+        closeMobileMenu.addEventListener('click', closeMobileMenuHandler);
+        mobileMenuOverlay.addEventListener('click', closeMobileMenuHandler);
+
+        // Close menu when clicking a link
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', closeMobileMenuHandler);
+        });
+
+        // Close menu on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !mobileMenu.classList.contains('-translate-x-full')) {
+                closeMobileMenuHandler();
+            }
         });
     });
 </script>

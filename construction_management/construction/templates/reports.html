@@ -1,0 +1,1177 @@
+{% extends 'base.html' %}
+{% block title %}KK Constructions - Analytics Dashboard{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+    :root {
+        --primary-color: #2563EB;
+        --secondary-color: #3B82F6;
+        --success-color: #10B981;
+        --danger-color: #EF4444;
+        --background-dark: #111827;
+        --card-bg: #1F2937;
+        --text-primary: #F9FAFB;
+        --text-secondary: #9CA3AF;
+        --border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dashboard-container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: var(--background-dark);
+        min-height: 100vh;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: var(--card-bg);
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .header-title i {
+        font-size: 2rem;
+        color: var(--primary-color);
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+        width: 100%;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        min-width: 0; /* Prevents overflow */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0.5rem 0;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stat-trend {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        color: var(--text-secondary);
+    }
+
+    /* Responsive breakpoints */
+    @media (max-width: 1400px) {
+        .stat-cards {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .stat-cards {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .stat-cards {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Card hover effects */
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Icon colors */
+    .stat-icon.budget { background: var(--primary-color); }
+    .stat-icon.payment { background: var(--success-color); }
+    .stat-icon.expense { background: var(--danger-color); }
+    .stat-icon.remaining { background: var(--secondary-color); }
+
+    /* Trend colors */
+    .trend-positive { color: var(--success-color); }
+    .trend-negative { color: var(--danger-color); }
+
+    .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        grid-column: span 6;
+        height: 400px; /* Fixed height */
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 48px !important;
+    }
+
+    .chart-header {
+        flex: 0 0 auto; /* Header won't shrink */
+    }
+
+    .chart-container {
+        background: var(--card-gradient);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        height: 100%;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .chart-wrapper {
+        flex: 1;
+        position: relative;
+        min-height: 300px;
+        width: 100%;
+        height: 100%;
+    }
+
+    canvas {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 400px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+        .chart-card {
+            grid-column: span 12;
+            height: 450px; /* Slightly taller on tablets */
+        }
+    }
+
+    @media (max-width: 768px) {
+        .chart-card {
+            height: 400px; /* Adjusted for mobile */
+        }
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chart-title i {
+        color: var(--primary-color);
+    }
+
+    .chart-filters {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .filter-select {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 0.75rem 2.5rem 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        appearance: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem;
+    }
+
+    .filter-select:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 1px var(--primary-color);
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .filter-select option {
+        background: var(--card-bg);
+        color: var(--text-primary);
+        padding: 0.75rem;
+    }
+
+    .action-button {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .action-button:hover {
+        background: var(--secondary-color);
+        transform: translateY(-2px);
+    }
+
+    .action-button:disabled {
+        background: var(--text-secondary);
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 1024px) {
+        .chart-card {
+            grid-column: span 12;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .header-actions {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stat-cards {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chart-content {
+        display: flex;
+        gap: 2rem;
+        height: 100%;
+    }
+
+    .chart-categories {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(31, 41, 55, 0.5);
+        border-radius: 0.5rem;
+        min-width: 200px;
+    }
+
+    .category-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        background: rgba(31, 41, 55, 0.3);
+    }
+
+    .category-color {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 0.25rem;
+    }
+
+    .category-label {
+        color: var(--text-primary);
+        font-size: 0.875rem;
+    }
+
+    #expenseChart, #paymentChart {
+        flex: 1;
+    }
+
+    @media (max-width: 1024px) {
+        .chart-content {
+            flex-direction: column;
+        }
+
+        .chart-categories {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            min-width: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="header-title">
+            <i class="ri-dashboard-3-line"></i>
+            <h1>Project Analytics</h1>
+                    </div>
+        <div class="header-actions">
+            <select id="projectSelect" class="filter-select">
+                <option value="">Select Project</option>
+                    </select>
+            <button id="downloadReport" class="action-button" disabled>
+                <i class="ri-download-cloud-line"></i>
+                Export Report
+                </button>
+            </div>
+        </div>
+
+    <div class="stat-cards">
+                <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon budget">
+                    <i class="ri-currency-line"></i>
+                </div>
+            </div>
+                    <div class="stat-label">Total Project Budget</div>
+                    <div id="totalBudget" class="stat-value">₹0</div>
+            <div class="stat-trend trend-positive">
+                <i class="ri-arrow-up-line"></i>
+                <span>Budget Allocation</span>
+                </div>
+        </div>
+
+                <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon payment">
+                    <i class="ri-bank-card-line"></i>
+                </div>
+            </div>
+                    <div class="stat-label">Total Amount Received   </div>
+                    <div id="totalPayments" class="stat-value">₹0</div>
+            <div class="stat-trend">
+                <i class="ri-exchange-line"></i>
+                <span>Payment Progress</span>
+                </div>
+        </div>
+
+                <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon expense">
+                    <i class="ri-funds-line"></i>
+                </div>
+            </div>
+                    <div class="stat-label">Total Expenses spent</div>
+                    <div id="totalExpenses" class="stat-value">₹0</div>
+            <div class="stat-trend trend-negative">
+                <i class="ri-arrow-down-line"></i>
+                <span>Expense Track</span>
+                </div>
+        </div>
+
+                <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon remaining">
+                    <i class="ri-wallet-3-line"></i>
+                </div>
+            </div>
+                    <div class="stat-label">Total Available Funds</div>
+                    <div id="remainingBudget" class="stat-value">₹0</div>
+            <div class="stat-trend">
+                <i class="ri-funds-line"></i>
+                <span>Available Funds</span>
+                </div>
+        </div>
+
+                <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon payment">
+                    <i class="ri-line-chart-line"></i>
+                </div>
+            </div>
+            <div class="stat-label">Project Progress</div>
+            <div id="projectProgress" class="stat-value">0%</div>
+            <div class="stat-trend trend-positive">
+                <i class="ri-funds-line"></i>
+                <span>Based on Expenses</span>
+                </div>
+            </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon expense">
+                    <i class="ri-hand-coin-line"></i>
+                </div>
+            </div>
+            <div class="stat-label">Due Payments to be received</div>
+            <div id="duePayments" class="stat-value">₹0</div>
+            <div class="stat-trend trend-negative">
+                <i class="ri-wallet-3-line"></i>
+                <span>Pending Amount</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-controls" style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+        <select class="filter-select" id="timeRangeSelect">
+            <option value="month">This Month</option>
+            <option value="quarter">This Quarter</option>
+            <option value="year">This Year</option>
+        </select>
+    </div>
+    <div class="chart-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="ri-bar-chart-2-line"></i>
+                    Expense Distribution
+                </h3>
+            </div>
+            <div class="chart-content">
+                <div id="expenseChart"></div>
+                <div class="chart-categories">
+                    <div class="category-item">
+                        <span class="category-color" style="background-color: #4ecdc4;"></span>
+                        <span class="category-label">Manpower Expenses</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-color" style="background-color: #ff6b6b;"></span>
+                        <span class="category-label">Material Expenses</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="ri-pie-chart-2-line"></i>
+                    Receipt Distribution
+                </h3>
+            </div>
+            <div class="chart-content">
+                <div id="paymentChart"></div>
+                <div class="chart-categories">
+                    <div class="category-item">
+                        <span class="category-color" style="background-color: #ffe66d;"></span>
+                        <span class="category-label">Advance Payments</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-color" style="background-color: #1dd1a1;"></span>
+                        <span class="category-label">Installment Payments</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-color" style="background-color: #48dbfb;"></span>
+                        <span class="category-label">Full Payments</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const { jsPDF } = window.jspdf;
+    let currentProjectData = null;
+    let allProjects = [];
+    let expenseChartInstance = null;
+    let paymentChartInstance = null;
+    let trendChartInstance = null;
+    let overallProjectStats = null;
+
+    const expenseColors = {
+        'Manpower': '#4ecdc4',
+        'Material': '#ff6b6b'
+    };
+    const paymentColors = {
+        'Advance': '#ffe66d',
+        'Installment': '#1dd1a1',
+        'Full': '#48dbfb'
+    };
+
+    function formatCurrency(amount) {
+        return '₹' + amount.toLocaleString('en-IN');
+    }
+
+    function showError(message) {
+        console.error('Error:', message);
+        alert(message);
+    }
+
+    function updateStatCards(overall) {
+        document.getElementById('totalBudget').textContent = formatCurrency(overall.budget);
+        document.getElementById('totalPayments').textContent = formatCurrency(overall.total_payments);
+        document.getElementById('totalExpenses').textContent = formatCurrency(overall.total_expenses);
+        document.getElementById('remainingBudget').textContent = formatCurrency(overall.available_funds);
+        document.getElementById('projectProgress').textContent = `${overall.budget_utilization}%`;
+        document.getElementById('duePayments').textContent = formatCurrency(overall.due_payments);
+    }
+
+    function updateCharts(filtered) {
+        setTimeout(() => {
+            // Update Expense Chart
+            const expenseOptions = {
+                series: Object.values(filtered.expense_breakdown),
+                chart: {
+                    type: 'donut',
+                    height: 350,
+                    background: 'transparent',
+                    foreColor: '#9CA3AF',
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800,
+                        animateGradually: {
+                            enabled: true,
+                            delay: 150
+                        },
+                        dynamicAnimation: {
+                            enabled: true,
+                            speed: 350
+                        }
+                    }
+                },
+                labels: Object.keys(filtered.expense_breakdown),
+                colors: Object.keys(filtered.expense_breakdown).map(label => expenseColors[label] || '#8395a7'),
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '70%',
+                            labels: {
+                                show: true,
+                                name: {
+                                    show: true,
+                                    fontSize: '22px',
+                                    fontFamily: 'Helvetica, Arial, sans-serif',
+                                    fontWeight: 600,
+                                    color: '#F9FAFB'
+                                },
+                                value: {
+                                    show: true,
+                                    fontSize: '16px',
+                                    fontFamily: 'Helvetica, Arial, sans-serif',
+                                    fontWeight: 400,
+                                    color: '#9CA3AF',
+                                    formatter: function (val) {
+                                        return formatCurrency(val);
+                                    }
+                                },
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    fontSize: '16px',
+                                    fontFamily: 'Helvetica, Arial, sans-serif',
+                                    fontWeight: 600,
+                                    color: '#F9FAFB',
+                                    formatter: function (w) {
+                                        return formatCurrency(w.globals.seriesTotals.reduce((a, b) => a + b, 0));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    offsetY: 24,
+                    fontFamily: 'Helvetica, Arial, sans-serif',
+                    fontSize: '14px',
+                    markers: {
+                        width: 12,
+                        height: 12,
+                        strokeWidth: 0,
+                        strokeColor: '#fff',
+                        radius: 12
+                    },
+                    itemMargin: {
+                        horizontal: 10,
+                        vertical: 5
+                    }
+                },
+                stroke: {
+                    width: 0
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            height: 300
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }]
+            };
+
+            if (expenseChartInstance) {
+                expenseChartInstance.destroy();
+            }
+            const expenseChartElement = document.querySelector("#expenseChart");
+            if (expenseChartElement) {
+                expenseChartInstance = new ApexCharts(expenseChartElement, expenseOptions);
+                expenseChartInstance.render();
+            }
+
+            // Update Payment Chart
+            const paymentOptions = {
+                series: Object.values(filtered.payment_breakdown),
+                chart: {
+                    type: 'donut',
+                    height: 350,
+                    background: 'transparent',
+                    foreColor: '#9CA3AF',
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800,
+                        animateGradually: {
+                            enabled: true,
+                            delay: 150
+                        },
+                        dynamicAnimation: {
+                            enabled: true,
+                            speed: 350
+                        }
+                    }
+                },
+                labels: Object.keys(filtered.payment_breakdown),
+                colors: Object.keys(filtered.payment_breakdown).map(label => paymentColors[label] || '#8395a7'),
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '70%',
+                            labels: {
+                                show: true,
+                                name: {
+                                    show: true,
+                                    fontSize: '22px',
+                                    fontFamily: 'Helvetica, Arial, sans-serif',
+                                    fontWeight: 600,
+                                    color: '#F9FAFB'
+                                },
+                                value: {
+                                    show: true,
+                                    fontSize: '16px',
+                                    fontFamily: 'Helvetica, Arial, sans-serif',
+                                    fontWeight: 400,
+                                    color: '#9CA3AF',
+                                    formatter: function (val) {
+                                        return formatCurrency(val);
+                                    }
+                                },
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    fontSize: '16px',
+                                    fontFamily: 'Helvetica, Arial, sans-serif',
+                                    fontWeight: 600,
+                                    color: '#F9FAFB',
+                                    formatter: function (w) {
+                                        return formatCurrency(w.globals.seriesTotals.reduce((a, b) => a + b, 0));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    offsetY: 24,
+                    fontFamily: 'Helvetica, Arial, sans-serif',
+                    fontSize: '14px',
+                    markers: {
+                        width: 12,
+                        height: 12,
+                        strokeWidth: 0,
+                        strokeColor: '#fff',
+                        radius: 12
+                    },
+                    itemMargin: {
+                        horizontal: 10,
+                        vertical: 5
+                    }
+                },
+                stroke: {
+                    width: 0
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            height: 300
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }]
+            };
+
+            if (paymentChartInstance) {
+                paymentChartInstance.destroy();
+            }
+            const paymentChartElement = document.querySelector("#paymentChart");
+            if (paymentChartElement) {
+                paymentChartInstance = new ApexCharts(paymentChartElement, paymentOptions);
+                paymentChartInstance.render();
+            }
+
+            // Update Trend Chart
+            const trendOptions = {
+                series: [{
+                    name: 'Expenses',
+                    data: filtered.monthly_trend.expenses.map(item => item.amount)
+                }, {
+                    name: 'Payments',
+                    data: filtered.monthly_trend.payments.map(item => item.amount)
+                }],
+                chart: {
+                    type: 'area',
+                    height: 350,
+                    background: 'transparent',
+                    foreColor: '#9CA3AF',
+                    toolbar: {
+                        show: false
+                    },
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800,
+                        animateGradually: {
+                            enabled: true,
+                            delay: 150
+                        },
+                        dynamicAnimation: {
+                            enabled: true,
+                            speed: 350
+                        }
+                    }
+                },
+                colors: [expenseColors['Manpower'] || '#8395a7', paymentColors['Advance'] || '#8395a7'],
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 2
+                },
+                xaxis: {
+                    categories: filtered.monthly_trend.expenses.map(item => item.date),
+                    labels: {
+                        style: {
+                            colors: '#9CA3AF'
+                        }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: function(value) {
+                            return formatCurrency(value);
+                        },
+                        style: {
+                            colors: '#9CA3AF'
+                        }
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return formatCurrency(value);
+                        }
+                    }
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.7,
+                        opacityTo: 0.3,
+                        stops: [0, 90, 100]
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'right',
+                    fontFamily: 'Helvetica, Arial, sans-serif',
+                    fontSize: '14px',
+                    markers: {
+                        width: 12,
+                        height: 12,
+                        strokeWidth: 0,
+                        strokeColor: '#fff',
+                        radius: 12
+                    }
+                }
+            };
+
+            if (trendChartInstance) {
+                trendChartInstance.destroy();
+            }
+            const trendChartElement = document.querySelector("#trendChart");
+            if (trendChartElement) {
+                trendChartInstance = new ApexCharts(trendChartElement, trendOptions);
+                trendChartInstance.render();
+            }
+        }, 100);
+    }
+
+    async function fetchProjectData(projectId, timeRange = 'month', updateCards = true) {
+        try {
+            const response = await fetch(`/api/reports/${projectId}/?time_range=${timeRange}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error ${response.status}`);
+            }
+            const data = await response.json();
+            currentProjectData = data;
+            overallProjectStats = {
+                budget: data.budget,
+                ...data.overall
+            };
+            if (updateCards) {
+                updateStatCards(overallProjectStats);
+            }
+            updateCharts(data.filtered);
+            document.getElementById('downloadReport').disabled = false;
+        } catch (error) {
+            console.error('Error fetching project data:', error);
+            showError(error.message || 'Failed to load project data');
+        }
+    }
+
+    // Function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function fetchProjects() {
+        try {
+            const response = await fetch('/api/projects/');
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            const projects = await response.json();
+            
+            const projectSelect = document.getElementById('projectSelect');
+            projectSelect.innerHTML = '<option value="">Select Project</option>' + 
+                projects.map(project => `<option value="${project.id}">${project.name}</option>`).join('');
+            
+            projectSelect.addEventListener('change', (e) => {
+                if (e.target.value) fetchProjectData(e.target.value, 'month', true);
+            });
+        } catch (error) {
+            console.error('Error fetching projects:', error);
+            showError('Failed to load projects');
+        }
+    }
+
+    async function downloadReport() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        loadingIndicator.classList.remove('hidden');
+
+        try {
+            const project = allProjects.find(p => p.project_id === currentProjectData.project_id);
+            if (!project) throw new Error('Project not found');
+
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'pt',
+                format: 'a4'
+            });
+
+            // Add company header
+            doc.setFontSize(24);
+            doc.setTextColor(59, 130, 246); // Blue color
+            doc.text('KK Constructions', 40, 40);
+            
+            doc.setFontSize(16);
+            doc.setTextColor(100, 116, 139); // Slate color
+            doc.text('Project Financial Report', 40, 70);
+
+            // Project details section
+            doc.setFontSize(12);
+            doc.setTextColor(30, 41, 59); // Slate 900
+            doc.text('Project Details:', 40, 120);
+            
+            const details = [
+                ['Project ID:', project.project_id],
+                ['Project Name:', project.name],
+                ['Location:', project.location],
+                ['Start Date:', new Date(project.start_date).toLocaleDateString()],
+                ['End Date:', project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Ongoing'],
+                ['Status:', project.status]
+            ];
+
+            let yPos = 150;
+            details.forEach(([label, value]) => {
+                doc.setFontSize(11);
+                doc.setTextColor(71, 85, 105); // Slate 600
+                doc.text(label, 40, yPos);
+                doc.setTextColor(15, 23, 42); // Slate 900
+                doc.text(value, 150, yPos);
+                yPos += 25;
+            });
+
+            // Financial summary section
+            yPos += 20;
+            doc.setFontSize(14);
+            doc.setTextColor(59, 130, 246); // Blue color
+            doc.text('Financial Summary', 40, yPos);
+            
+            yPos += 30;
+            const financials = [
+                ['Total Budget:', `₹${project.budget.toLocaleString()}`],
+                ['Total Expenses:', `₹${currentProjectData.total_expenses.toLocaleString()}`],
+                ['Total Payments:', `₹${currentProjectData.total_payments.toLocaleString()}`],
+                ['Remaining Amount:', `₹${project.remaining_amount.toLocaleString()}`]
+            ];
+
+            financials.forEach(([label, value]) => {
+                doc.setFontSize(11);
+                doc.setTextColor(71, 85, 105); // Slate 600
+                doc.text(label, 40, yPos);
+                doc.setTextColor(15, 23, 42); // Slate 900
+                doc.text(value, 200, yPos);
+                yPos += 25;
+            });
+
+            // Add charts
+            yPos += 30;
+            doc.setFontSize(14);
+            doc.setTextColor(59, 130, 246); // Blue color
+            doc.text('Expense Distribution', 40, yPos);
+            
+            const expenseChart = document.getElementById('expenseChart');
+            const expenseCanvas = await html2canvas(expenseChart, {
+                scale: 2,
+                backgroundColor: '#ffffff'
+            });
+            doc.addImage(expenseCanvas.toDataURL('image/png'), 'PNG', 40, yPos + 20, 250, 200);
+
+            yPos += 250;
+            doc.setFontSize(14);
+            doc.text('Payment Distribution', 40, yPos);
+            
+            const paymentChart = document.getElementById('paymentChart');
+            const paymentCanvas = await html2canvas(paymentChart, {
+                scale: 2,
+                backgroundColor: '#ffffff'
+            });
+            doc.addImage(paymentCanvas.toDataURL('image/png'), 'PNG', 40, yPos + 20, 250, 200);
+
+            // Add expense details
+            yPos += 250;
+            doc.setFontSize(14);
+            doc.text('Expense Details', 40, yPos);
+            
+            yPos += 30;
+            const expenseDetails = currentProjectData.expenses.map(expense => [
+                expense.date,
+                expense.description,
+                `₹${expense.amount.toLocaleString()}`
+            ]);
+
+            doc.setFontSize(10);
+            doc.setTextColor(71, 85, 105); // Slate 600
+            doc.text('Date', 40, yPos);
+            doc.text('Description', 120, yPos);
+            doc.text('Amount', 400, yPos);
+            
+            yPos += 20;
+            expenseDetails.forEach(([date, desc, amount]) => {
+                doc.setTextColor(15, 23, 42); // Slate 900
+                doc.text(date, 40, yPos);
+                doc.text(desc, 120, yPos);
+                doc.text(amount, 400, yPos);
+                yPos += 20;
+            });
+
+            // Add payment details
+            yPos += 30;
+            doc.setFontSize(14);
+            doc.setTextColor(59, 130, 246); // Blue color
+            doc.text('Payment Details', 40, yPos);
+            
+            yPos += 30;
+            const paymentDetails = currentProjectData.payments.map(payment => [
+                payment.date,
+                payment.description,
+                `₹${payment.amount.toLocaleString()}`
+            ]);
+
+            doc.setFontSize(10);
+            doc.setTextColor(71, 85, 105); // Slate 600
+            doc.text('Date', 40, yPos);
+            doc.text('Description', 120, yPos);
+            doc.text('Amount', 400, yPos);
+            
+            yPos += 20;
+            paymentDetails.forEach(([date, desc, amount]) => {
+                doc.setTextColor(15, 23, 42); // Slate 900
+                doc.text(date, 40, yPos);
+                doc.text(desc, 120, yPos);
+                doc.text(amount, 400, yPos);
+                yPos += 20;
+            });
+
+            // Add footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(100, 116, 139); // Slate 500
+                doc.text(
+                    `Page ${i} of ${pageCount}`,
+                    doc.internal.pageSize.width / 2,
+                    doc.internal.pageSize.height - 20,
+                    { align: 'center' }
+                );
+                doc.text(
+                    `Generated on ${new Date().toLocaleDateString()}`,
+                    doc.internal.pageSize.width / 2,
+                    doc.internal.pageSize.height - 40,
+                    { align: 'center' }
+                );
+            }
+
+            doc.save(`${project.project_id}_financial_report.pdf`);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.querySelector('.error-text').textContent = 'Error generating PDF report. Please try again.';
+            errorMessage.classList.remove('hidden');
+        } finally {
+            loadingIndicator.classList.add('hidden');
+        }
+    }
+
+    // Initialize
+        fetchProjects();
+
+    // Add event listener for timeRangeSelect
+    document.getElementById('timeRangeSelect').addEventListener('change', function(e) {
+        const projectId = document.getElementById('projectSelect').value;
+        if (projectId) {
+            fetchProjectData(projectId, e.target.value, false);
+        }
+    });
+
+    function updateProjectProgress(expenses, budget) {
+        const progressElement = document.getElementById('projectProgress');
+        const progress = budget > 0 ? Math.min(Math.round((expenses / budget) * 100), 100) : 0;
+        progressElement.textContent = `${progress}%`;
+    }
+
+    function updateDuePayments(totalExpenses, totalPaid) {
+        const dueElement = document.getElementById('duePayments');
+        const dueAmount = Math.max(totalExpenses - totalPaid, 0);
+        dueElement.textContent = formatCurrency(dueAmount);
+    }
+
+    // Add these calls in your existing updateDashboard function
+    function updateDashboard(data) {
+        // ... existing code ...
+        updateProjectProgress(data.total_expenses, data.budget);
+        updateDuePayments(data.total_expenses, data.total_payments);
+        // ... existing code ...
+    }
+</script>
+{% endblock %} 

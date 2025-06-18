@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% block title %}KK Constructions - Payments{% endblock %}
+
+{% block content %}
+<section id="payments" class="py-16 bg-dark">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold text-lightText mb-4 sm:mb-0">Payments</h2>
+            <button id="addPaymentBtn" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+                <span class="w-6 h-6 flex items-center justify-center mr-2">
+                    <i class="ri-add-line"></i>
+                </span>
+                Add Payment
+            </button>
+        </div>
+
+        <!-- Payment List -->
+        <div class="bg-darkSecondary rounded-lg shadow-lg p-6 mb-8">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-gray-300 border-b border-gray-700">
+                            <th class="pb-4">Project</th>
+                            <th class="pb-4">Amount</th>
+                            <th class="pb-4">Date</th>
+                            <th class="pb-4">Type</th>
+                            <th class="pb-4">Description</th>
+                            <th class="pb-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentList" class="text-gray-300">
+                        <!-- Payment rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add Payment Modal -->
+<div id="addPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-darkSecondary rounded-lg p-6 w-full max-w-2xl mx-4 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-lightText">Add New Payment</h3>
+            <button id="closeModalBtn" class="text-gray-400 hover:text-white transition-colors">
+                <span class="w-6 h-6 flex items-center justify-center">
+                    <i class="ri-close-line ri-lg"></i>
+                </span>
+            </button>
+        </div>
+        <form id="addPaymentForm">
+            {% csrf_token %}
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Project</label>
+                <select name="project" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" required>
+                    <option value="">Select Project</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Amount (₹)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
+                    <input type="number" name="amount" step="0.01" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 pl-8" placeholder="0.00" required>
+                </div>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Payment Date</label>
+                <input type="date" name="payment_date" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Payment Type</label>
+                <select name="payment_type" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" required>
+                    <option value="Advance">Advance Payment</option>
+                    <option value="Installment">Installment Payment</option>
+                    <option value="Final">Final Payment</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Description</label>
+                <textarea name="description" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 h-24 resize-none" placeholder="Enter payment description"></textarea>
+            </div>
+            <button type="submit" class="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full">Add Payment</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+    }
+
+    function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString('en-IN');
+    }
+
+    async function fetchProjects() {
+        try {
+            const response = await fetch('/api/projects/');
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            const projects = await response.json();
+            const select = document.querySelector('select[name="project"]');
+            select.innerHTML = '<option value="">Select Project</option>' + 
+                projects.map(project => `<option value="${project.id}">${project.name}</option>`).join('');
+        } catch (error) {
+            console.error('Error fetching projects:', error);
+            alert('Failed to load projects');
+        }
+    }
+
+    async function fetchPayments() {
+        try {
+            const response = await fetch('/api/payments/');
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            const payments = await response.json();
+            const tbody = document.getElementById('paymentList');
+            tbody.innerHTML = '';
+            
+            payments.forEach(payment => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="py-4">${payment.project_name}</td>
+                    <td class="py-4">${formatCurrency(payment.amount)}</td>
+                    <td class="py-4">${formatDate(payment.payment_date)}</td>
+                    <td class="py-4">${payment.payment_type}</td>
+                    <td class="py-4">${payment.description || '-'}</td>
+                    <td class="py-4">
+                        <button onclick="deletePayment(${payment.id})" class="text-red-500 hover:text-red-600 transition-colors">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error fetching payments:', error);
+            alert('Failed to load payments');
+        }
+    }
+
+    async function addPayment(event) {
+        event.preventDefault();
+        const form = document.getElementById('addPaymentForm');
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/api/payments/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            });
+            
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            
+            document.getElementById('addPaymentModal').classList.add('hidden');
+            form.reset();
+            fetchPayments();
+        } catch (error) {
+            console.error('Error adding payment:', error);
+            alert('Failed to add payment');
+        }
+    }
+
+    async function deletePayment(id) {
+        if (confirm('Are you sure you want to delete this payment?')) {
+            try {
+                const response = await fetch(`/api/payments/${id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                
+                fetchPayments();
+            } catch (error) {
+                console.error('Error deleting payment:', error);
+                alert('Failed to delete payment');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchProjects();
+        fetchPayments();
+        
+        const addPaymentBtn = document.getElementById('addPaymentBtn');
+        const addPaymentModal = document.getElementById('addPaymentModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const addPaymentForm = document.getElementById('addPaymentForm');
+        
+        addPaymentBtn.addEventListener('click', function() {
+            addPaymentModal.classList.remove('hidden');
+        });
+        
+        closeModalBtn.addEventListener('click', function() {
+            addPaymentModal.classList.add('hidden');
+            addPaymentForm.reset();
+        });
+        
+        addPaymentModal.addEventListener('click', function(e) {
+            if (e.target === addPaymentModal) {
+                addPaymentModal.classList.add('hidden');
+                addPaymentForm.reset();
+            }
+        });
+        
+        addPaymentForm.addEventListener('submit', addPayment);
+    });
+</script>
+{% endblock %} 

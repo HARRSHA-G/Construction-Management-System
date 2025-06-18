@@ -1,681 +1,822 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
+{% extends 'base.html' %}
+{% block title %}Ram Constructions - Expenses{% endblock %}
 
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><script type="text/javascript">
-    var gk_isXlsx = false;
-    var gk_xlsxFileLookup = {};
-    var gk_fileData = {};
-    function filledCell(cell) {
-        return cell !== '' && cell != null;
+{% block extra_head %}
+<style>
+    .expense-form {
+        background-color: #1F2937;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-    function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                    row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                    headerRowIndex = 0;
-                }
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
+    
+    .form-input {
+        background-color: #374151;
+        border: none;
+        color: #F3F4F6;
+        border-radius: 0.375rem;
+        padding: 0.75rem 1rem;
+        width: 100%;
     }
-</script>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Construction Management System - Expenses</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B82F6',
-                        secondary: '#6B7280',
-                        dark: '#111827',
-                        darkSecondary: '#1F2937',
-                        darkTertiary: '#374151',
-                        lightText: '#F9FAFB'
-                    },
-                    borderRadius: {
-                        'none': '0px',
-                        'sm': '4px',
-                        DEFAULT: '8px',
-                        'md': '12px',
-                        'lg': '16px',
-                        'xl': '20px',
-                        '2xl': '24px',
-                        '3xl': '32px',
-                        'full': '9999px',
-                        'button': '8px'
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        :where([class^="ri-"])::before { content: "\f3c2"; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827;
-            color: #F9FAFB;
-        }
-        .logo {
-            font-family: 'Pacifico', serif;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1F2937;
-            border-radius: 20px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #4B5563;
-            border-radius: 20px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #6B7280;
-        }
-        .custom-switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
-        }
-        .custom-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #374151;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #3B82F6;
-        }
-        input:checked + .slider:before {
-            transform: translateX(20px);
-        }
-        .custom-radio {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-        .custom-radio-input {
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid #4B5563;
-            border-radius: 50%;
-            margin-right: 8px;
-            position: relative;
-            cursor: pointer;
-        }
-        .custom-radio-input:checked {
-            border-color: #3B82F6;
-        }
-        .custom-radio-input:checked::after {
-            content: "";
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #3B82F6;
-        }
-        .custom-checkbox {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-        .custom-checkbox-input {
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid #4B5563;
-            border-radius: 4px;
-            margin-right: 8px;
-            position: relative;
-            cursor: pointer;
-        }
-        .custom-checkbox-input:checked {
-            border-color: #3B82F6;
-            background-color: #3B82F6;
-        }
-        .custom-checkbox-input:checked::after {
-            content: "";
-            position: absolute;
-            top: 2px;
-            left: 5px;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-        .custom-range {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 6px;
-            background: #374151;
-            border-radius: 5px;
-            outline: none;
-        }
-        .custom-range::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #3B82F6;
-            cursor: pointer;
-        }
-        .custom-range::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #3B82F6;
-            cursor: pointer;
-            border: none;
-        }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .slide-up {
-            animation: slideUp 0.5s ease-in-out;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-    </style>
-</head>
-<body>
-    <header class="fixed top-0 left-0 right-0 bg-darkSecondary z-50 shadow-lg">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-end">
-                <a href="{% url 'index' %}" class="logo text-2xl text-primary font-['Pacifico'] mr-auto">Ram Constructions</a>
-                <nav class="hidden md:flex space-x-6 mr-4">
-                    <a href="{% url 'index' %}" class="text-lightText hover:text-primary transition-colors py-2 border-b-2 border-transparent">Home</a>
-                    <a href="{% url 'projects' %}" class="text-lightText hover:text-primary transition-colors py-2 border-b-2 border-transparent">Projects</a>
-                    <a href="{% url 'expenses' %}" class="text-lightText hover:text-primary transition-colors py-2 border-b-2 border-primary">Expenses</a>
-                    <a href="{% url 'analytics' %}" class="text-lightText hover:text-primary transition-colors py-2 border-b-2 border-transparent">Analytics</a>
-                </nav>
-                <div class="flex items-center space-x-4">
-                    <button id="mobileMenuBtn" class="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary !rounded-button">
-                        <i class="ri-menu-line text-lightText ri-lg"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="mobileMenu" class="md:hidden mt-4 pb-2 hidden">
-                <nav class="flex flex-col space-y-3">
-                    <a href="{% url 'index' %}" class="text-lightText hover:text-primary transition-colors py-2 px-3 rounded-lg bg-darkTertiary">Home</a>
-                    <a href="{% url 'projects' %}" class="text-lightText hover:text-primary transition-colors py-2 px-3 rounded-lg bg-darkTertiary">Projects</a>
-                    <a href="{% url 'expenses' %}" class="text-lightText hover:text-primary transition-colors py-2 px-3 rounded-lg bg-darkTertiary">Expenses</a>
-                    <a href="{% url 'analytics' %}" class="text-lightText hover:text-primary transition-colors py-2 px-3 rounded-lg bg-darkTertiary">Analytics</a>
-                </nav>
-            </div>
-        </div>
-    </header>
-    <main class="pt-16">
-        <section id="expenses" class="py-16 bg-darkSecondary">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-lightText mb-8">Expenses</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-dark rounded-lg p-6 shadow-lg">
-                        <h3 class="text-xl font-semibold text-lightText mb-6">Add New Expense</h3>
-                        <form id="expenseForm">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <div>
-                                    <label class="block text-gray-300 mb-2">Project</label>
-                                    <div class="relative">
-                                        <select id="projectSelect" name="project_id" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 appearance-none pr-8" required>
-                                            <option value="">Select Project</option>
-                                        </select>
-                                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none w-5 h-5 flex items-center justify-center">
-                                            <i class="ri-arrow-down-s-line text-gray-400"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-gray-300 mb-2">Date</label>
-                                    <input type="date" name="date" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" required>
-                                </div>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-gray-300 mb-2">Expense Type</label>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <label class="custom-radio">
-                                        <input type="radio" name="expense_type" value="land" class="custom-radio-input" checked>
-                                        <span>Land</span>
-                                    </label>
-                                    <label class="custom-radio">
-                                        <input type="radio" name="expense_type" value="manpower" class="custom-radio-input">
-                                        <span>Manpower</span>
-                                    </label>
-                                    <label class="custom-radio">
-                                        <input type="radio" name="expense_type" value="materials" class="custom-radio-input">
-                                        <span>Materials</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="landFields" class="expense-fields mb-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Cost</label>
-                                        <div class="relative">
-                                            <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                                            <input type="number" name="cost" step="0.01" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 pl-8" placeholder="0.00" required>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Description</label>
-                                        <input type="text" name="description" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Land purchase details">
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="manpowerFields" class="expense-fields mb-6 hidden">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Workers</label>
-                                        <input type="number" name="workers" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Number of workers">
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Daily Rate</label>
-                                        <div class="relative">
-                                            <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                                            <input type="number" name="daily_rate" step="0.01" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 pl-8" placeholder="0.00">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Total Cost</label>
-                                        <div class="relative">
-                                            <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                                            <input type="number" name="cost" step="0.01" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 pl-8" placeholder="0.00" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="materialsFields" class="expense-fields mb-6 hidden">
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Material Type</label>
-                                        <input type="text" name="material_type" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Concrete, Steel, etc.">
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Quantity</label>
-                                        <input type="number" name="quantity" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Amount">
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Unit Cost</label>
-                                        <div class="relative">
-                                            <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                                            <input type="number" name="unit_cost" step="0.01" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 pl-8" placeholder="0.00">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Total Cost</label>
-                                        <div class="relative">
-                                            <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                                            <input type="number" name="cost" step="0.01" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 pl-8" placeholder="0.00" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="submit" class="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors !rounded-button whitespace-nowrap">Add Expense</button>
-                        </form>
-                    </div>
-                    <div class="bg-dark rounded-lg p-6 shadow-lg">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-xl font-semibold text-lightText">Recent Expenses</h3>
-                            <button id="downloadExpensesBtn" class="bg-darkTertiary hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center !rounded-button whitespace-nowrap">
-                                <span class="w-5 h-5 flex items-center justify-center mr-2">
-                                    <i class="ri-download-line"></i>
-                                </span>
-                                Download
-                            </button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-full">
-                                <thead>
-                                    <tr class="border-b border-darkTertiary">
-                                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Project</th>
-                                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Date</th>
-                                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Type</th>
-                                        <th class="text-left py-3 px-4 text-gray-400 font-medium">Details</th>
-                                        <th class="text-right py-3 px-4 text-gray-400 font-medium">Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="expenseList">
-                                    <!-- Expenses will be dynamically loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-    <footer class="bg-darkSecondary py-12 border-t border-darkTertiary">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <a href="{% url 'index' %}" class="logo text-2xl text-primary font-['Pacifico'] mb-4 block">Ram Constructions</a>
-                    <p class="text-gray-300 mb-4">Comprehensive construction management system for builders and contractors.</p>
-                    <div class="flex space-x-4">
-                        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary text-lightText hover:bg-primary transition-colors">
-                            <i class="ri-facebook-fill"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary text-lightText hover:bg-primary transition-colors">
-                            <i class="ri-twitter-x-fill"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary text-lightText hover:bg-primary transition-colors">
-                            <i class="ri-linkedin-fill"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-darkTertiary text-lightText hover:bg-primary transition-colors">
-                            <i class="ri-instagram-fill"></i>
-                        </a>
-                    </div>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold text-lightText mb-4">Quick Links</h4>
-                    <ul class="space-y-2">
-                        <li><a href="{% url 'index' %}" class="text-gray-300 hover:text-primary transition-colors">Home</a></li>
-                        <li><a href="{% url 'projects' %}" class="text-gray-300 hover:text-primary transition-colors">Projects</a></li>
-                        <li><a href="{% url 'expenses' %}" class="text-gray-300 hover:text-primary transition-colors">Expenses</a></li>
-                        <li><a href="{% url 'analytics' %}" class="text-gray-300 hover:text-primary transition-colors">Analytics</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold text-lightText mb-4">Contact</h4>
-                    <ul class="space-y-2">
-                        <li class="flex items-start">
-                            <span class="w-5 h-5 flex items-center justify-center mr-2 mt-1">
-                                <i class="ri-map-pin-line text-primary"></i>
-                            </span>
-                            <span class="text-gray-300">123 Construction Ave, Building City, BC 12345</span>
-                        </li>
-                        <li class="flex items-center">
-                            <span class="w-5 h-5 flex items-center justify-center mr-2">
-                                <i class="ri-phone-line text-primary"></i>
-                            </span>
-                            <span class="text-gray-300">+1 (555) 123-4567</span>
-                        </li>
-                        <li class="flex items-center">
-                            <span class="w-5 h-5 flex items-center justify-center mr-2">
-                                <i class="ri-mail-line text-primary"></i>
-                            </span>
-                            <span class="text-gray-300"><a href="mailto:info@ramconstructions.com">info@ramconstructions.com</a></span>
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold text-lightText mb-4">Newsletter</h4>
-                    <p class="text-gray-300 mb-4">Subscribe to our newsletter for updates.</p>
-                    <form class="flex">
-                        <input type="email" placeholder="Your email" class="bg-darkTertiary border-none text-lightText rounded-l-lg px-4 py-2 w-full">
-                        <button type="submit" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg transition-colors !rounded-button whitespace-nowrap">
-                            <span class="w-5 h-5 flex items-center justify-center">
-                                <i class="ri-send-plane-line"></i>
-                            </span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-            <div class="border-t border-darkTertiary mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-400 mb-4 md:mb-0">© 2025 Construction Management System. All rights reserved.</p>
-                <div class="flex space-x-6">
-                    <a href="#" class="text-gray-400 hover:text-primary transition-colors">Privacy Policy</a>
-                    <a href="#" class="text-gray-400 hover:text-primary transition-colors">Terms of Service</a>
-                    <a href="#" class="text-gray-400 hover:text-primary transition-colors">Cookie Policy</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <div id="downloadDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden fade-in">
-        <div class="bg-darkSecondary rounded-lg p-6 w-full max-w-lg mx-4 shadow-2xl slide-up">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-semibold text-lightText">Export Expenses</h3>
-                <button id="closeDownloadDialog" class="text-gray-400 hover:text-white transition-colors">
-                    <span class="w-6 h-6 flex items-center justify-center">
-                        <i class="ri-close-line ri-lg"></i>
-                    </span>
-                </button>
-            </div>
-            <form id="downloadForm">
-                <div class="mb-6">
-                    <label class="block text-gray-300 mb-2">Export Format</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <label class="custom-radio">
-                            <input type="radio" name="export_format" value="csv" class="custom-radio-input" checked>
-                            <span>CSV</span>
-                        </label>
-                        <label class="custom-radio">
-                            <input type="radio" name="export_format" value="excel" class="custom-radio-input">
-                            <span>Excel</span>
-                        </label>
-                        <label class="custom-radio">
-                            <input type="radio" name="export_format" value="pdf" class="custom-radio-input">
-                            <span>PDF</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-300 mb-2">Date Range</label>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-sm text-gray-400">From</label>
-                            <input type="date" id="dateFrom" name="date_from" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-2 mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-gray-400">To</label>
-                            <input type="date" id="dateTo" name="date_to" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-2 mt-1">
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-300 mb-2">Project</label>
-                    <div class="relative">
-                        <select id="exportProject" name="project_id" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-2 appearance-none pr-8">
-                            <option value="">All Projects</option>
-                        </select>
-                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none w-5 h-5 flex items-center justify-center">
-                            <i class="ri-arrow-down-s-line text-gray-400"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-300 mb-2">Expense Type</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <label class="custom-checkbox">
-                            <input type="checkbox" name="expense_type" value="materials" class="custom-checkbox-input" checked>
-                            <span>Materials</span>
-                        </label>
-                        <label class="custom-checkbox">
-                            <input type="checkbox" name="expense_type" value="manpower" class="custom-checkbox-input" checked>
-                            <span>Manpower</span>
-                        </label>
-                        <label class="custom-checkbox">
-                            <input type="checkbox" name="expense_type" value="land" class="custom-checkbox-input" checked>
-                            <span>Land</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="bg-darkTertiary rounded-lg p-4 mb-6">
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-300">Records to be exported:</span>
-                        <span id="recordCount" class="text-lightText font-semibold">0 records</span>
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancelDownload" class="bg-darkTertiary hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors !rounded-button whitespace-nowrap">Cancel</button>
-                    <button type="submit" class="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors !rounded-button whitespace-nowrap flex items-center">
-                        <span class="w-5 h-5 flex items-center justify-center mr-2">
-                            <i class="ri-download-line"></i>
-                        </span>
-                        Download
-                    </button>
-                </div>
-            </form>
+    
+    .form-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #3B82F6;
+    }
+    
+    .form-label {
+        color: #D1D5DB;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .expense-type-radio {
+        display: none;
+    }
+    
+    .expense-type-label {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background-color: #374151;
+        color: #D1D5DB;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        margin-right: 0.5rem;
+    }
+    
+    .expense-type-radio:checked + .expense-type-label {
+        background-color: #3B82F6;
+        color: white;
+    }
+    
+    .expense-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .expense-table th {
+        background-color: #374151;
+        color: #D1D5DB;
+        padding: 0.75rem 1rem;
+        text-align: left;
+    }
+    
+    .expense-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #374151;
+        color: #F3F4F6;
+    }
+    
+    .expense-table tr:hover {
+        background-color: #374151;
+    }
+    
+    .btn-primary {
+        background-color: #3B82F6;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2563EB;
+    }
+
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: #1F2937;
+        margin: 15% auto;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        width: 80%;
+        max-width: 500px;
+    }
+
+    .close {
+        color: #D1D5DB;
+        float: right;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover {
+        color: #F3F4F6;
+    }
+
+    .expense-tab {
+        padding: 0.5rem 1rem;
+        color: #D1D5DB;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .expense-tab:hover {
+        color: #3B82F6;
+    }
+
+    .expense-tab.active {
+        color: #3B82F6;
+        border-bottom-color: #3B82F6;
+    }
+
+    .expense-table-container {
+        margin-top: 1rem;
+        overflow-x: auto;
+    }
+
+    .expense-table-container table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .expense-table-container th {
+        background-color: #374151;
+        color: #D1D5DB;
+        font-weight: 500;
+        text-align: left;
+        padding: 0.75rem 1rem;
+    }
+
+    .expense-table-container td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #374151;
+        color: #F3F4F6;
+    }
+
+    .expense-table-container tr:hover {
+        background-color: #374151;
+    }
+
+    .action-button {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .delete-button {
+        color: #EF4444;
+    }
+
+    .delete-button:hover {
+        color: #DC2626;
+        background-color: rgba(239, 68, 68, 0.1);
+    }
+
+    .expense-type-selector {
+        background-color: #1F2937;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .expense-type-button {
+        padding: 0.75rem 1.5rem;
+        background-color: #374151;
+        color: #D1D5DB;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        margin-right: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .expense-type-button:hover {
+        background-color: #4B5563;
+    }
+
+    .expense-type-button.active {
+        background-color: #3B82F6;
+        color: white;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Expense Type Selection -->
+    <div class="expense-type-selector">
+        <h2 class="text-2xl font-bold text-white mb-4">Select Expense Type</h2>
+        <div class="flex space-x-4">
+            <button type="button" class="expense-type-button active" data-type="manpower">Manpower Expense</button>
+            <button type="button" class="expense-type-button" data-type="material">Material Expense</button>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const mobileMenu = document.getElementById('mobileMenu');
-            const expenseForm = document.getElementById('expenseForm');
-            const expenseList = document.getElementById('expenseList');
-            const projectSelect = document.getElementById('projectSelect');
-            const exportProject = document.getElementById('exportProject');
-            const downloadExpensesBtn = document.getElementById('downloadExpensesBtn');
-            const downloadDialog = document.getElementById('downloadDialog');
-            const closeDownloadDialog = document.getElementById('closeDownloadDialog');
-            const cancelDownload = document.getElementById('cancelDownload');
-            const downloadForm = document.getElementById('downloadForm');
-            const expenseTypeRadios = document.querySelectorAll('input[name="expense_type"]');
-            const landFields = document.getElementById('landFields');
-            const manpowerFields = document.getElementById('manpowerFields');
-            const materialsFields = document.getElementById('materialsFields');
 
-            mobileMenuBtn.addEventListener('click', function() {
-                mobileMenu.classList.toggle('hidden');
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Add Expense Form -->
+        <div class="expense-form">
+            <h2 class="text-2xl font-bold text-white mb-6">Add New Expense</h2>
+            <div id="expenseError" class="mb-4 text-red-500 font-semibold" style="display:none;"></div>
+            <form id="expenseForm" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Project Selection -->
+                <div>
+                    <label class="form-label">Project</label>
+                    <select id="formProjectSelect" name="project" class="form-input" required>
+                        <option value="">Select Project</option>
+                    </select>
+                </div>
+                
+                <!-- Date Selection -->
+                <div>
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" class="form-input" required>
+                </div>
+                
+                <!-- Hidden expense type field -->
+                <input type="hidden" name="type" id="expenseType" value="manpower">
+                
+                <!-- Dynamic Fields -->
+                <div id="manpowerFields">
+                    <div>
+                        <label class="form-label">Labour Work Type</label>
+                        <select id="workTypeSelect" name="work_type" class="form-input" required>
+                            <option value="">Select Work Type</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Number of People</label>
+                        <input type="number" name="number_of_people" class="form-input" required oninput="calculateManpowerTotal()">
+                    </div>
+                    <div>
+                        <label class="form-label">Unit Labour Cost (₹)</label>
+                        <input type="number" name="per_person_cost" step="0.01" class="form-input" required oninput="calculateManpowerTotal()">
+                    </div>
+                    <div>
+                        <label class="form-label">Total Amount (₹)</label>
+                        <input type="number" name="total_amount" step="0.01" class="form-input" readonly>
+                    </div>
+                    <div>
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-input" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- Material Fields -->
+                <div id="materialFields" style="display: none;">
+                    <div>
+                        <label class="form-label">Item</label>
+                        <select name="item" id="materialItemSelect" class="form-input" required>
+                            <option value="">Select Item</option>
+                        </select>
+                    </div>
+                    <div id="customItemField" style="display: none;">
+                        <label class="form-label">Custom Item Name</label>
+                        <input type="text" name="custom_item_name" class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Cost per Unit (₹)</label>
+                        <input type="number" name="per_unit_cost" step="0.01" class="form-input" required oninput="calculateMaterialTotal()">
+                    </div>
+                    <div>
+                        <label class="form-label">Quantity</label>
+                        <input type="number" name="quantity" step="0.01" class="form-input" required oninput="calculateMaterialTotal()">
+                    </div>
+                    <div>
+                        <label class="form-label">Total Amount (₹)</label>
+                        <input type="number" name="total_amount" step="0.01" class="form-input" readonly>
+                    </div>
+                    <div>
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-input" rows="3"></textarea>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-primary w-full">Add Expense</button>
+            </form>
+        </div>
+        
+        <!-- Expenses List -->
+        <div class="expense-form">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Expenses</h2>
+            </div>
+
+            <!-- Expense Type Tabs -->
+            <div class="mb-6">
+                <div class="flex space-x-4 border-b border-gray-700">
+                    <button class="expense-tab active" data-type="manpower">Manpower Expenses</button>
+                    <button class="expense-tab" data-type="material">Material Expenses</button>
+                </div>
+            </div>
+
+            <!-- Expenses Tables -->
+            <div id="manpowerExpenses" class="expense-table-container">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">People</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Person</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manpowerExpensesTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="materialExpenses" class="expense-table-container" style="display: none;">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Unit</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materialExpensesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Download Modal -->
+<div id="downloadModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 class="text-2xl font-bold text-white mb-6">Download Expenses</h2>
+        <form id="downloadForm" class="space-y-6">
+            <div>
+                <label class="form-label">Select Project</label>
+                <select id="downloadProjectSelect" name="project" class="form-input" required>
+                    <option value="">All Projects</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Format</label>
+                <div class="flex space-x-4">
+                    <input type="radio" id="pdfFormat" name="format" value="pdf" class="expense-type-radio" checked>
+                    <label for="pdfFormat" class="expense-type-label">PDF</label>
+                    
+                    <input type="radio" id="excelFormat" name="format" value="excel" class="expense-type-radio">
+                    <label for="excelFormat" class="expense-type-label">Excel</label>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary w-full">Download</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Add CSRF token to all AJAX requests
+function getCSRFToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Add CSRF token to all fetch requests
+function fetchWithCSRF(url, options = {}) {
+    const defaultOptions = {
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    };
+    return fetch(url, { ...defaultOptions, ...options });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded');
+    initializeProjectSelects();
+    initializeWorkTypeSelect();
+    initializeExpenseTabs();
+    initializeExpenseTypeSelector();
+    initializeExpenseForm();
+    
+    // Load initial expenses
+    const activeTab = document.querySelector('.expense-tab.active');
+    if (activeTab) {
+        fetchExpensesByType(activeTab.dataset.type);
+    }
+});
+
+function initializeProjectSelects() {
+    const formProjectSelect = document.getElementById('formProjectSelect');
+    
+    // Fetch projects with CSRF
+    fetchWithCSRF('/api/projects/')
+        .then(response => response.json())
+        .then(projects => {
+            projects.forEach(project => {
+                // Add to form select
+                const formOption = document.createElement('option');
+                formOption.value = project.id;
+                formOption.textContent = project.name;
+                formProjectSelect.appendChild(formOption);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching projects:', error);
+            alert('Failed to fetch projects. Please try again.');
+        });
+}
+
+function initializeWorkTypeSelect() {
+    const workTypeSelect = document.getElementById('workTypeSelect');
+    if (!workTypeSelect) return;
+    fetchWithCSRF('/api/labor-work-types/')
+        .then(response => response.json())
+        .then(workTypes => {
+            workTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type.id;
+                option.textContent = type.name_display || type.name;
+                workTypeSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching work types:', error);
+            alert('Failed to fetch labor work types.');
+        });
+}
+
+function handleItemSelection() {
+    const itemSelect = document.querySelector('select[name="item"]');
+    const customItemField = document.getElementById('customItemField');
+    const customItemInput = document.querySelector('input[name="custom_item_name"]');
+    
+    if (itemSelect.value === 'others') {
+        customItemField.style.display = 'block';
+        customItemInput.required = true;
+    } else {
+        customItemField.style.display = 'none';
+        customItemInput.required = false;
+    }
+}
+
+function calculateManpowerTotal() {
+    const numberOfPeople = parseFloat(document.querySelector('input[name="number_of_people"]').value) || 0;
+    const perPersonCost = parseFloat(document.querySelector('input[name="per_person_cost"]').value) || 0;
+    const total = Math.round(numberOfPeople * perPersonCost); // integer only
+    const totalInput = document.querySelector('input[name="total_amount"]');
+    if (totalInput) {
+        totalInput.value = total;
+    }
+}
+
+function calculateMaterialTotal() {
+    const perUnitCost = parseFloat(document.querySelector('input[name="per_unit_cost"]').value) || 0;
+    const quantity = parseFloat(document.querySelector('input[name="quantity"]').value) || 0;
+    const total = Math.round(perUnitCost * quantity); // integer only
+    const totalInput = document.querySelector('#materialFields input[name="total_amount"]');
+    if (totalInput) {
+        totalInput.value = total;
+    }
+}
+
+function initializeExpenseTypeSelector() {
+    const expenseTypeButtons = document.querySelectorAll('.expense-type-button');
+    const expenseTypeInput = document.getElementById('expenseType');
+    const materialFields = document.getElementById('materialFields');
+    const manpowerFields = document.getElementById('manpowerFields');
+    const expenseForm = document.getElementById('expenseForm');
+
+    function setRequiredFields(type) {
+        // Manpower fields
+        document.querySelector('input[name="number_of_people"]').required = (type === 'manpower');
+        document.querySelector('input[name="per_person_cost"]').required = (type === 'manpower');
+        // Material fields
+        document.querySelector('select[name="item"]').required = (type === 'material');
+        document.querySelector('input[name="per_unit_cost"]').required = (type === 'material');
+        document.querySelector('input[name="quantity"]').required = (type === 'material');
+    }
+
+    expenseTypeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            expenseTypeButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+
+            const expenseType = this.dataset.type;
+            expenseTypeInput.value = expenseType;
+
+            // Show/hide appropriate form fields
+            if (expenseType === 'material') {
+                materialFields.style.display = 'block';
+                manpowerFields.style.display = 'none';
+                // Reset material fields
+                document.querySelector('input[name="per_unit_cost"]').value = '';
+                document.querySelector('input[name="quantity"]').value = '';
+                document.querySelector('#materialFields input[name="total_amount"]').value = '0';
+                document.querySelector('select[name="item"]').value = '';
+                document.getElementById('customItemField').style.display = 'none';
+                // Fetch material items when switching to material expense
+                fetchMaterialItems();
+            } else {
+                materialFields.style.display = 'none';
+                manpowerFields.style.display = 'block';
+                // Reset manpower fields
+                document.querySelector('input[name="number_of_people"]').value = '';
+                document.querySelector('input[name="per_person_cost"]').value = '';
+                document.querySelector('input[name="total_amount"]').value = '0';
+            }
+
+            // Set required attributes correctly
+            setRequiredFields(expenseType);
+
+            // Reset form
+            expenseForm.reset();
+        });
+    });
+
+    // Set required fields on initial load
+    setRequiredFields(document.getElementById('expenseType').value);
+}
+
+function initializeExpenseForm() {
+    const expenseForm = document.getElementById('expenseForm');
+
+    // Add input event listeners for calculations
+    document.querySelector('input[name="per_unit_cost"]').addEventListener('input', calculateMaterialTotal);
+    document.querySelector('input[name="quantity"]').addEventListener('input', calculateMaterialTotal);
+    document.querySelector('input[name="number_of_people"]').addEventListener('input', calculateManpowerTotal);
+    document.querySelector('input[name="per_person_cost"]').addEventListener('input', calculateManpowerTotal);
+
+    // Handle form submission with CSRF
+    expenseForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const expenseType = document.getElementById('expenseType').value;
+        
+        // Validate material expense fields
+        if (expenseType === 'material') {
+            const itemSelect = document.querySelector('select[name="item"]');
+            if (itemSelect.value === '') {
+                alert('Please select a material item');
+                return;
+            }
+        }
+
+        // Calculate totals before submission
+        if (expenseType === 'manpower') {
+            calculateManpowerTotal();
+        } else if (expenseType === 'material') {
+            calculateMaterialTotal();
+        }
+
+        // Convert FormData to JSON
+        const jsonData = {
+            type: expenseType,
+            project: formData.get('project'),
+            date: formData.get('date'),
+            description: formData.get('description') || ''
+        };
+
+        // Add type-specific fields
+        if (expenseType === 'manpower') {
+            jsonData.number_of_people = parseInt(formData.get('number_of_people'));
+            jsonData.per_person_cost = parseFloat(formData.get('per_person_cost'));
+            jsonData.total_amount = parseFloat(document.querySelector('#manpowerFields input[name="total_amount"]').value);
+            jsonData.work_type = formData.get('work_type');
+        } else if (expenseType === 'material') {
+            jsonData.item = formData.get('item');
+            if (jsonData.item === 'others') {
+                jsonData.custom_item_name = formData.get('custom_item_name');
+            }
+            jsonData.per_unit_cost = parseFloat(formData.get('per_unit_cost'));
+            jsonData.quantity = parseFloat(formData.get('quantity'));
+            jsonData.total_amount = parseFloat(document.querySelector('#materialFields input[name="total_amount"]').value);
+        }
+
+        try {
+            const response = await fetchWithCSRF('/api/expenses/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
             });
 
-            function fetchProjects() {
-                fetch('/api/projects/')
-                    .then(response => response.json())
-                    .then(data => {
-                        projectSelect.innerHTML = '<option value="">Select Project</option>';
-                        exportProject.innerHTML = '<option value="">All Projects</option>';
-                        data.forEach(project => {
-                            const option = `<option value="${project.id}">${project.name}</option>`;
-                            projectSelect.insertAdjacentHTML('beforeend', option);
-                            exportProject.insertAdjacentHTML('beforeend', option);
-                        });
-                    });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to add expense');
             }
 
-            function fetchExpenses() {
-                fetch('/api/expenses/')
-                    .then(response => response.json())
-                    .then(data => {
-                        expenseList.innerHTML = '';
-                        document.getElementById('recordCount').textContent = `${data.length} records`;
-                        data.forEach(expense => {
-                            const statusColors = {
-                                'materials': 'blue-500',
-                                'manpower': 'green-500',
-                                'land': 'yellow-500'
-                            };
-                            let details = expense.description;
-                            if (expense.expense_type === 'manpower' && expense.workers) {
-                                details = `Workers (${expense.workers})`;
-                            } else if (expense.expense_type === 'materials' && expense.material_type) {
-                                details = `${expense.material_type} (${expense.quantity || 0})`;
-                            }
-                            const expenseRow = `
-                                <tr class="border-b border-darkTertiary">
-                                    <td class="py-3 px-4 text-lightText">${expense.project.name}</td>
-                                    <td class="py-3 px-4 text-gray-300">${expense.date}</td>
-                                    <td class="py-3 px-4">
-                                        <span class="px-3 py-1 bg-${statusColors[expense.expense_type]} bg-opacity-20 text-${statusColors[expense.expense_type].replace('500', '400')} rounded-full text-sm">${expense.expense_type.charAt(0).toUpperCase() + expense.expense_type.slice(1)}</span>
-                                    </td>
-                                    <td class="py-3 px-4 text-gray-300">${details}</td>
-                                    <td class="py-3 px-4 text-right text-lightText font-medium">$${parseFloat(expense.cost).toLocaleString()}</td>
-                                </tr>
-                            `;
-                            expenseList.insertAdjacentHTML('beforeend', expenseRow);
-                        });
-                    });
+            alert('Expense added successfully!');
+            this.reset();
+            document.getElementById('customItemField').style.display = 'none';
+            
+            // Refresh the expenses list
+            const activeTab = document.querySelector('.expense-tab.active');
+            if (activeTab) {
+                fetchExpensesByType(activeTab.dataset.type);
             }
+        } catch (error) {
+            console.error('Error:', error);
+            alert(error.message);
+        }
+    });
+}
 
-            expenseTypeRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    landFields.classList.add('hidden');
-                    manpowerFields
+async function fetchExpensesByType(type) {
+    try {
+        const response = await fetchWithCSRF(`/api/expenses/?type=${type}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch expenses');
+        }
+        const expenses = await response.json();
+        updateExpenseTable(type, expenses);
+    } catch (error) {
+        console.error(`Error fetching ${type} expenses:`, error);
+        const tbody = document.getElementById(`${type}ExpensesTableBody`);
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
+    }
+}
+
+async function fetchExpensesByProject(projectId) {
+    try {
+        const response = await fetchWithCSRF(`/api/expenses/?project_id=${projectId}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch project expenses');
+        }
+        const expenses = await response.json();
+        
+        // Group expenses by type
+        const groupedExpenses = {
+            manpower: expenses.filter(e => e.type === 'manpower'),
+            material: expenses.filter(e => e.type === 'material')
+        };
+        
+        // Update each table
+        Object.entries(groupedExpenses).forEach(([type, typeExpenses]) => {
+            updateExpenseTable(type, typeExpenses);
+        });
+    } catch (error) {
+        console.error('Error fetching project expenses:', error);
+        const tables = ['manpower', 'material'];
+        tables.forEach(type => {
+            const tbody = document.getElementById(`${type}ExpensesTableBody`);
+            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
+        });
+    }
+}
+
+function updateExpenseTable(type, expenses) {
+    const tbody = document.getElementById(`${type}ExpensesTableBody`);
+    tbody.innerHTML = '';
+    
+    if (!expenses || expenses.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="6" class="px-6 py-4 text-center text-gray-500">No expenses found</td>`;
+        tbody.appendChild(row);
+        return;
+    }
+    
+    expenses.forEach(expense => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-700 transition-colors duration-200';
+        
+        switch(type) {
+            case 'manpower':
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${expense.project_name || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${new Date(expense.date).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${expense.number_of_people}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">₹${parseFloat(expense.per_person_cost).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">₹${parseFloat(expense.total_amount).toFixed(2)}</td>
+                `;
+                break;
+                
+            case 'material':
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${expense.project_name || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${new Date(expense.date).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${expense.custom_item_name || expense.item_display || expense.item}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${expense.quantity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">₹${parseFloat(expense.per_unit_cost).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">₹${parseFloat(expense.total_amount).toFixed(2)}</td>
+                `;
+                break;
+        }
+        
+        tbody.appendChild(row);
+    });
+}
+
+async function deleteExpense(id, type) {
+    if (!confirm('Are you sure you want to delete this expense?')) return;
+    
+    try {
+        const response = await fetchWithCSRF(`/api/expenses/${id}/?type=${type}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete expense');
+        }
+
+        // Refresh the current view
+        const projectId = document.getElementById('formProjectSelect').value;
+        if (projectId) {
+            fetchExpensesByProject(projectId);
+        } else {
+            const activeTab = document.querySelector('.expense-tab.active');
+            if (activeTab) {
+                fetchExpensesByType(activeTab.dataset.type);
+            }
+        }
+    } catch (error) {
+        console.error('Error deleting expense:', error);
+        alert(`Failed to delete expense: ${error.message}`);
+    }
+}
+
+function initializeExpenseTabs() {
+    const tabs = document.querySelectorAll('.expense-tab');
+    const tables = document.querySelectorAll('.expense-table-container');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active class from all tabs
+            tabs.forEach(t => t.classList.remove('active'));
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Hide all tables
+            tables.forEach(table => table.style.display = 'none');
+            
+            // Show the corresponding table
+            const type = this.dataset.type;
+            document.getElementById(`${type}Expenses`).style.display = 'block';
+            
+            // Fetch expenses for the selected type
+            fetchExpensesByType(type);
+        });
+    });
+}
+
+function showExpenseError(message) {
+    const errorDiv = document.getElementById('expenseError');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+    setTimeout(() => { errorDiv.style.display = 'none'; }, 5000);
+}
+
+// Add this function to fetch material items
+async function fetchMaterialItems() {
+    try {
+        const response = await fetchWithCSRF('/api/material-items/');
+        if (!response.ok) {
+            throw new Error('Failed to fetch material items');
+        }
+        const items = await response.json();
+        const itemSelect = document.getElementById('materialItemSelect');
+        itemSelect.innerHTML = '<option value="">Select Item</option>';
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.display_name;
+            itemSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error fetching material items:', error);
+        alert('Failed to load material items. Please try again.');
+    }
+}
+</script>
+{% endblock %}

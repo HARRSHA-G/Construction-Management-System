@@ -6,28 +6,42 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
-    body {
+    html, body, .layout-root {
+        height: 100%;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
     }
-    main {
+
+    .main-content {
         flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 0;
+        padding-bottom: 2rem;
     }
+
     footer {
         flex-shrink: 0;
     }
+
     .custom-switch {
         position: relative;
         display: inline-block;
         width: 40px;
         height: 20px;
     }
+
     .custom-switch input {
         opacity: 0;
         width: 0;
         height: 0;
     }
+
     .custom-switch .slider {
         position: absolute;
         cursor: pointer;
@@ -39,6 +53,7 @@
         transition: 0.4s;
         border-radius: 20px;
     }
+
     .custom-switch .slider:before {
         position: absolute;
         content: "";
@@ -50,11 +65,302 @@
         transition: 0.4s;
         border-radius: 50%;
     }
+
     .custom-switch input:checked + .slider {
         background-color: #3B82F6;
     }
+
     .custom-switch input:checked + .slider:before {
         transform: translateX(20px);
+    }
+
+    .project-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #1F2937;
+        border: 1px solid #374151;
+        border-radius: 8px;
+        padding: 1rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        max-width: 300px;
+    }
+
+    .project-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        border-color: #3B82F6;
+    }
+
+    .project-id {
+        color: #3B82F6;
+        font-weight: 500;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .project-card h3 {
+        font-size: 1.125rem;
+        margin-bottom: 0.5rem;
+        color: #F9FAFB;
+    }
+
+    .project-card p {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        color: #9CA3AF;
+    }
+
+    .project-card p strong {
+        color: #D1D5DB;
+    }
+
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(250px, 1fr));
+        gap: 1rem;
+        width: 100%;
+        padding: 1rem 0;
+    }
+
+    @media (max-width: 1280px) {
+        .projects-grid {
+            grid-template-columns: repeat(3, minmax(250px, 1fr));
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .projects-grid {
+            grid-template-columns: repeat(2, minmax(250px, 1fr));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .projects-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .search-result-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border-bottom: 1px solid #374151;
+    }
+
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .search-result-item:hover {
+        background-color: #374151;
+    }
+
+    .search-result-item .project-id {
+        color: #3B82F6;
+        font-weight: 500;
+        margin-right: 0.5rem;
+    }
+
+    .search-result-item .project-name {
+        color: #F9FAFB;
+    }
+
+    .search-result-item .project-budget {
+        color: #9CA3AF;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .project-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: auto;
+        padding-top: 0.75rem;
+        border-top: 1px solid #374151;
+    }
+
+    .project-actions button,
+    .project-actions a {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .project-actions button:hover,
+    .project-actions a:hover {
+        background-color: #374151;
+    }
+
+    /* Modal Styles */
+    .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: #1F2937;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid #374151;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background: #1F2937;
+        z-index: 1;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 1rem;
+        border-top: 1px solid #374151;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        position: sticky;
+        bottom: 0;
+        background: #1F2937;
+    }
+
+    .form-group {
+        margin-bottom: 0.75rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        color: #D1D5DB;
+        margin-bottom: 0.25rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        background: #374151;
+        border: 1px solid #4B5563;
+        border-radius: 4px;
+        color: #F9FAFB;
+        font-size: 0.875rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3B82F6;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.5rem;
+        background: #374151;
+        border: 1px solid #4B5563;
+        border-radius: 4px;
+        color: #F9FAFB;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #3B82F6;
+    }
+
+    .form-textarea {
+        width: 100%;
+        padding: 0.5rem;
+        background: #374151;
+        border: 1px solid #4B5563;
+        border-radius: 4px;
+        color: #F9FAFB;
+        font-size: 0.875rem;
+        min-height: 80px;
+        resize: vertical;
+    }
+
+    .form-textarea:focus {
+        outline: none;
+        border-color: #3B82F6;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: #3B82F6;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: #2563EB;
+    }
+
+    .btn-secondary {
+        background: #4B5563;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background: #374151;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        color: #9CA3AF;
+        cursor: pointer;
+        padding: 0.25rem;
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    .close-btn:hover {
+        color: #F9FAFB;
+    }
+
+    /* Custom scrollbar for modal */
+    .modal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+        background: #1F2937;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+        background: #4B5563;
+        border-radius: 3px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb:hover {
+        background: #6B7280;
     }
 </style>
 {% endblock %}
@@ -63,16 +369,21 @@
     <div class="container mx-auto px-4">
         <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
             <h2 class="text-3xl font-bold text-lightText mb-4 sm:mb-0">Projects</h2>
-            <button id="addProjectBtn" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
-                <span class="w-6 h-6 flex items-center justify-center mr-2">
-                    <i class="ri-add-line"></i>
-                </span>
-                Add Project
-            </button>
+            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="projectSearch" placeholder="Search by ID or name..." class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-2">
+                    <div id="projectSearchResults" class="absolute z-50 w-full mt-1 bg-darkSecondary border border-darkTertiary rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+                    </div>
+                </div>
+                <button id="addProjectBtn" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+                    <span class="w-6 h-6 flex items-center justify-center mr-2">
+                        <i class="ri-add-line"></i>
+                    </span>
+                    Add Project
+                </button>
+            </div>
         </div>
-        <div id="projectList" class="custom-scrollbar overflow-x-auto pb-4">
-            <div class="flex space-x-6 min-w-max" id="projectCards"></div>
-        </div>
+        <div class="projects-grid" id="projectCards"></div>
     </div>
 </section>
 <!-- Add Project Modal -->
@@ -87,9 +398,14 @@
             </button>
         </div>
         <form id="addProjectForm">
+            {% csrf_token %}
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Project ID</label>
+                <input type="text" name="project_id" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Enter project ID (e.g. ID-0001ABC)" required>
+            </div>
             <div class="mb-6">
                 <label class="block text-gray-300 mb-2">Project Name</label>
-            <input type="text" name="name" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Enter project name" required>
+                <input type="text" name="name" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Enter project name" required>
             </div>
             <div class="mb-6">
                 <label class="block text-gray-300 mb-2">Land Details</label>
@@ -107,11 +423,16 @@
                 </div>
             </div>
             <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Duration (Months)</label>
+                <input type="number" name="duration_months" min="1" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" placeholder="Enter project duration in months" required>
+            </div>
+            <div class="mb-6">
                 <label class="block text-gray-300 mb-2">Status</label>
                 <select name="status" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" required>
-                    <option value="Planned">Planned</option>
-                    <option value="In Progress">In Progress</option>
+                    <option value="Active">Active</option>
                     <option value="Completed">Completed</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Cancelled">Cancelled</option>
                 </select>
             </div>
             <div class="mb-6">
@@ -122,6 +443,103 @@
         </form>
     </div>
 </div>
+
+<!-- Edit Project Modal -->
+<div id="editProjectModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold text-lightText">Edit Project</h3>
+            <button id="closeEditModalBtn" class="close-btn">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="editProjectForm">
+                <input type="hidden" id="editProjectId" name="id">
+                <div class="form-group">
+                    <label for="editProjectName">Project Name</label>
+                    <input type="text" id="editProjectName" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editLandDetails">Land Details</label>
+                    <textarea id="editLandDetails" name="land_details" class="form-textarea" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editLandAddress">Land Address</label>
+                    <textarea id="editLandAddress" name="land_address" class="form-textarea" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editBudget">Budget Amount</label>
+                    <input type="number" id="editBudget" name="budget" class="form-control" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDuration">Duration (months)</label>
+                    <input type="number" id="editDuration" name="duration_months" class="form-control" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status</label>
+                    <select id="editStatus" name="status" class="form-select" required>
+                        <option value="Active">Active</option>
+                        <option value="Completed">Completed</option>
+                        <option value="On Hold">On Hold</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editTotalPaid">Total Amount Paid</label>
+                    <input type="number" id="editTotalPaid" name="total_paid" class="form-control" step="0.01" min="0" required>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+            <button type="submit" form="editProjectForm" class="btn btn-primary">Update Project</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Payment Modal -->
+<div id="addPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-darkSecondary rounded-lg p-6 w-full max-w-2xl mx-4 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-lightText">Add Payment</h3>
+            <button id="closePaymentModalBtn" class="text-gray-400 hover:text-white transition-colors">
+                <span class="w-6 h-6 flex items-center justify-center">
+                    <i class="ri-close-line ri-lg"></i>
+                </span>
+            </button>
+        </div>
+        <form id="addPaymentForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="project" id="paymentProjectId">
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Amount (₹)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">₹</span>
+                    <input type="number" name="amount" step="0.01" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3 pl-8" placeholder="0.00" required>
+                </div>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Payment Date</label>
+                <input type="date" name="payment_date" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Payment Type</label>
+                <select name="payment_type" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3" required>
+                    <option value="Advance">Advance Payment</option>
+                    <option value="Installment">Installment Payment</option>
+                    <option value="Full">Full Payment</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Payment Document (Optional)</label>
+                <input type="file" name="payment_file" class="w-full bg-darkTertiary border-none text-lightText rounded-lg px-4 py-3">
+            </div>
+            <button type="submit" class="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full">Add Payment</button>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 {% block extra_scripts %}
 <script>
@@ -131,36 +549,113 @@
         return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
     }
 
+    let allProjects = [];
+    let filteredProjects = [];
+
     async function fetchProjects() {
         try {
             const response = await fetch('/api/projects/');
-            const projects = await response.json();
-            const projectCards = document.getElementById('projectCards');
-            projectCards.innerHTML = '';
-            if (projects.length === 0) {
-                projectCards.innerHTML = '<p class="text-gray-300">No projects available. Add a project to get started.</p>';
-            } else {
-                projects.forEach(project => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-darkSecondary rounded-lg shadow-lg p-6 w-80 flex-none slide-up';
-                    card.innerHTML = `
-                        <h3 class="text-xl font-semibold text-lightText mb-2">${project.name}</h3>
-                        <p class="text-gray-300 mb-2"><strong>Land Details:</strong> ${project.land_details}</p>
-                        <p class="text-gray-300 mb-2"><strong>Address:</strong> ${project.land_address}</p>
-                        <p class="text-gray-300 mb-2"><strong>Budget:</strong> ${formatCurrency(project.budget)}</p>
-                        <p class="text-gray-300 mb-4"><strong>Status:</strong> <span class="px-2 py-1 rounded-full text-sm ${project.status === 'Completed' ? 'bg-green-500' : project.status === 'In Progress' ? 'bg-yellow-500' : 'bg-gray-500'}">${project.status}</span></p>
-                        <div class="flex space-x-4">
-                            ${project.document ? `<a href="${project.document}" download class="text-primary hover:text-blue-600 transition-colors flex items-center"><span class="w-5 h-5 mr-1"><i class="ri-download-line"></i></span>Download</a>` : ''}
-                            <button onclick="deleteProject(${project.id})" class="text-red-500 hover:text-red-600 transition-colors flex items-center"><span class="w-5 h-5 mr-1"><i class="ri-delete-bin-line"></i></span>Delete</button>
-                        </div>
-                    `;
-                    projectCards.appendChild(card);
-                });
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('Fetch projects response:', text);
+                throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
             }
+            allProjects = await response.json();
+            filteredProjects = [...allProjects];
+            displayProjects(allProjects);
+            setupProjectSearch();
         } catch (error) {
             console.error('Error fetching projects:', error);
-            alert('Failed to load projects.');
+            showError('Failed to load projects. Please try again later.');
         }
+    }
+
+    function displayProjects(projects) {
+        const projectCards = document.getElementById('projectCards');
+        projectCards.innerHTML = '';
+        if (projects.length === 0) {
+            projectCards.innerHTML = '<p class="text-gray-300">No projects available. Add a project to get started.</p>';
+        } else {
+            projects.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'project-card';
+                card.onclick = () => openEditModal(project);
+                const displayId = project.project_id.replace('ID-', '');
+                card.innerHTML = `
+                    <div class="project-id">ID: ${displayId}</div>
+                    <h3>${project.name}</h3>
+                    <p><strong>Land Details:</strong> ${project.land_details}</p>
+                    <p><strong>Address:</strong> ${project.land_address}</p>
+                    <p><strong>Budget:</strong> ${formatCurrency(project.budget)}</p>
+                    <p><strong>Duration:</strong> ${project.duration_months} months</p>
+                    <p><strong>Paid:</strong> ${formatCurrency(project.total_paid)}</p>
+                    <p><strong>Due:</strong> ${formatCurrency(project.remaining_amount)}</p>
+                    <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full text-sm ${
+                        project.status === 'Completed' ? 'bg-green-500' : 
+                        project.status === 'Active' ? 'bg-orange-500' : 
+                        project.status === 'On Hold' ? 'bg-yellow-500' : 
+                        'bg-red-500'
+                    }">${project.status}</span></p>
+                    <div class="project-actions">
+                        <button onclick="event.stopPropagation(); openPaymentModal(${project.id})" class="text-primary hover:text-blue-600 transition-colors flex items-center">
+                            <span class="w-4 h-4 mr-1"><i class="ri-money-dollar-circle-line"></i></span>
+                            Add Payment
+                        </button>
+                        ${project.document ? `<a href="${project.document}" download class="text-primary hover:text-blue-600 transition-colors flex items-center"><span class="w-4 h-4 mr-1"><i class="ri-download-line"></i></span>Download</a>` : ''}
+                        <button onclick="event.stopPropagation(); deleteProject(${project.id})" class="text-red-500 hover:text-red-600 transition-colors flex items-center">
+                            <span class="w-4 h-4 mr-1"><i class="ri-delete-bin-line"></i></span>
+                            Delete
+                        </button>
+                    </div>
+                `;
+                projectCards.appendChild(card);
+            });
+        }
+    }
+
+    function setupProjectSearch() {
+        const searchInput = document.getElementById('projectSearch');
+        const searchResults = document.getElementById('projectSearchResults');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            if (searchTerm.length < 2) {
+                searchResults.classList.add('hidden');
+                displayProjects(allProjects);
+                return;
+            }
+            
+            filteredProjects = allProjects.filter(project => 
+                project.project_id.toLowerCase().includes(searchTerm) || 
+                project.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredProjects.length > 0) {
+                searchResults.innerHTML = filteredProjects.map(project => {
+                    const displayId = project.project_id.replace('ID-', '');
+                    return `
+                        <div class="search-result-item" data-project-id="${project.id}">
+                            <div>
+                                <span class="project-id">${displayId}</span>
+                                <span class="project-name">${project.name}</span>
+                            </div>
+                            <div class="project-budget">Budget: ${formatCurrency(project.budget)}</div>
+                        </div>
+                    `;
+                }).join('');
+                searchResults.classList.remove('hidden');
+                displayProjects(filteredProjects);
+            } else {
+                searchResults.classList.add('hidden');
+                displayProjects([]);
+            }
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
     }
 
     async function addProject(event) {
@@ -170,19 +665,29 @@
         try {
             const response = await fetch('/api/projects/', {
                 method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
                 body: formData
             });
-            if (response.ok) {
-                document.getElementById('addProjectModal').classList.add('hidden');
-                form.reset();
-                fetchProjects();
-            } else {
-                const error = await response.json();
-                alert('Error: ' + JSON.stringify(error));
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('Add project response:', text);
+                try {
+                    const error = JSON.parse(text);
+                    alert(`Error: ${JSON.stringify(error)}`);
+                } catch (e) {
+                    alert(`Server error ${response.status}: ${response.statusText}`);
+                }
+                return;
             }
+            const result = await response.json();
+            document.getElementById('addProjectModal').classList.add('hidden');
+            form.reset();
+            fetchProjects();
         } catch (error) {
             console.error('Error adding project:', error);
-            alert('Failed to add project.');
+            alert(`Failed to add project: ${error.message}`);
         }
     }
 
@@ -190,17 +695,223 @@
         if (confirm('Are you sure you want to delete this project?')) {
             try {
                 const response = await fetch(`/api/projects/${id}/`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
                 });
-                if (response.ok) {
-                    fetchProjects();
-                } else {
-                    alert('Failed to delete project.');
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (response.status === 400 && errorData.error) {
+                        // Ask for confirmation to delete expenses and payments
+                        if (confirm('This project has expenses or payments. Do you want to delete them along with the project?')) {
+                            try {
+                                // First delete all expenses
+                                const expensesResponse = await fetch(`/api/expenses/?project_id=${id}`, {
+                                    method: 'GET',
+                                    headers: {
+                                        'X-CSRFToken': getCookie('csrftoken')
+                                    }
+                                });
+                                
+                                if (expensesResponse.ok) {
+                                    const expenses = await expensesResponse.json();
+                                    for (const expense of expenses) {
+                                        await fetch(`/api/expenses/${expense.id}/?type=${expense.type}`, {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'X-CSRFToken': getCookie('csrftoken')
+                                            }
+                                        });
+                                    }
+                                }
+
+                                // Then delete all payments
+                                const paymentsResponse = await fetch(`/api/payments/?project_id=${id}`, {
+                                    method: 'GET',
+                                    headers: {
+                                        'X-CSRFToken': getCookie('csrftoken')
+                                    }
+                                });
+                                
+                                if (paymentsResponse.ok) {
+                                    const payments = await paymentsResponse.json();
+                                    for (const payment of payments) {
+                                        await fetch(`/api/payments/${payment.id}/`, {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'X-CSRFToken': getCookie('csrftoken')
+                                            }
+                                        });
+                                    }
+                                }
+
+                                // Now try to delete the project again
+                                const deleteResponse = await fetch(`/api/projects/${id}/`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRFToken': getCookie('csrftoken')
+                                    }
+                                });
+
+                                if (deleteResponse.ok) {
+                                    // Show success message
+                                    const successMessage = document.createElement('div');
+                                    successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                                    successMessage.textContent = 'Project and all associated data deleted successfully';
+                                    document.body.appendChild(successMessage);
+                                    
+                                    // Remove success message after 3 seconds
+                                    setTimeout(() => {
+                                        successMessage.remove();
+                                    }, 3000);
+                                    
+                                    // Refresh the projects list
+                                    fetchProjects();
+                                } else {
+                                    throw new Error('Failed to delete project after removing expenses and payments');
+                                }
+                            } catch (error) {
+                                console.error('Error deleting project data:', error);
+                                alert('Failed to delete project data: ' + error.message);
+                            }
+                        }
+                    } else {
+                        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+                    }
+                    return;
                 }
+                
+                // Show success message
+                const successMessage = document.createElement('div');
+                successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                successMessage.textContent = 'Project deleted successfully';
+                document.body.appendChild(successMessage);
+                
+                // Remove success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 3000);
+                
+                // Refresh the projects list
+                fetchProjects();
             } catch (error) {
                 console.error('Error deleting project:', error);
-                alert('Failed to delete project.');
+                alert(`Failed to delete project: ${error.message}`);
             }
+        }
+    }
+
+    async function updateProject(event) {
+        event.preventDefault();
+        const form = document.getElementById('editProjectForm');
+        const projectId = document.getElementById('editProjectId').value;
+
+        // Get form data
+        const formData = {
+            name: document.getElementById('editProjectName').value,
+            land_details: document.getElementById('editLandDetails').value,
+            land_address: document.getElementById('editLandAddress').value,
+            budget: parseFloat(document.getElementById('editBudget').value),
+            duration_months: parseInt(document.getElementById('editDuration').value),
+            status: document.getElementById('editStatus').value,
+            total_paid: parseFloat(document.getElementById('editTotalPaid').value) || 0
+        };
+
+        try {
+            const response = await fetch(`/api/projects/${projectId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Update error:', errorData);
+                throw new Error(errorData.error || `HTTP error ${response.status}`);
+            }
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            successMessage.textContent = 'Project updated successfully';
+            document.body.appendChild(successMessage);
+
+            // Remove success message after 3 seconds
+            setTimeout(() => {
+                successMessage.remove();
+            }, 3000);
+
+            // Close modal and refresh projects
+            document.getElementById('editProjectModal').classList.add('hidden');
+            fetchProjects();
+        } catch (error) {
+            console.error('Error updating project:', error);
+            alert(`Failed to update project: ${error.message}`);
+        }
+    }
+
+    function openEditModal(project) {
+        // Set all form fields
+        document.getElementById('editProjectId').value = project.id;
+        document.getElementById('editProjectName').value = project.name;
+        document.getElementById('editLandDetails').value = project.land_details;
+        document.getElementById('editLandAddress').value = project.land_address;
+        document.getElementById('editBudget').value = project.budget;
+        document.getElementById('editDuration').value = project.duration_months;
+        document.getElementById('editStatus').value = project.status;
+        document.getElementById('editTotalPaid').value = project.total_paid || 0;
+
+        // Show the modal
+        document.getElementById('editProjectModal').classList.remove('hidden');
+    }
+
+    function openPaymentModal(projectId) {
+        const modal = document.getElementById('addPaymentModal');
+        document.getElementById('paymentProjectId').value = projectId;
+        modal.classList.remove('hidden');
+    }
+
+    async function addPayment(event) {
+        event.preventDefault();
+        const form = document.getElementById('addPaymentForm');
+        const formData = new FormData(form);
+        
+        try {
+            if (!formData.get('payment_date')) {
+                const today = new Date().toISOString().split('T')[0];
+                formData.set('payment_date', today);
+            }
+
+            const response = await fetch('/api/payments/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            });
+            
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('Add payment response:', text);
+                try {
+                    const errorData = JSON.parse(text);
+                    throw new Error(errorData.error || `HTTP error ${response.status}: ${response.statusText}`);
+                } catch (e) {
+                    throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+                }
+            }
+            
+            document.getElementById('addPaymentModal').classList.add('hidden');
+            form.reset();
+            fetchProjects();
+        } catch (error) {
+            console.error('Error adding payment:', error);
+            alert(`Failed to add payment: ${error.message}`);
         }
     }
 
@@ -228,6 +939,42 @@
         });
 
         addProjectForm.addEventListener('submit', addProject);
+
+        const editProjectForm = document.getElementById('editProjectForm');
+        const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+        const editProjectModal = document.getElementById('editProjectModal');
+        
+        editProjectForm.addEventListener('submit', updateProject);
+        
+        closeEditModalBtn.addEventListener('click', function() {
+            editProjectModal.classList.add('hidden');
+            editProjectForm.reset();
+        });
+        
+        editProjectModal.addEventListener('click', function(e) {
+            if (e.target === editProjectModal) {
+                editProjectModal.classList.add('hidden');
+                editProjectForm.reset();
+            }
+        });
+
+        const addPaymentForm = document.getElementById('addPaymentForm');
+        const closePaymentModalBtn = document.getElementById('closePaymentModalBtn');
+        const addPaymentModal = document.getElementById('addPaymentModal');
+        
+        addPaymentForm.addEventListener('submit', addPayment);
+        
+        closePaymentModalBtn.addEventListener('click', function() {
+            addPaymentModal.classList.add('hidden');
+            addPaymentForm.reset();
+        });
+        
+        addPaymentModal.addEventListener('click', function(e) {
+            if (e.target === addPaymentModal) {
+                addPaymentModal.classList.add('hidden');
+                addPaymentForm.reset();
+            }
+        });
     });
 </script>
 {% endblock %}
